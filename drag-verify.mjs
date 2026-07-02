@@ -1,0 +1,18 @@
+import puppeteer from 'puppeteer-core';
+const browser = await puppeteer.launch({ executablePath: '/usr/bin/chromium', args: ['--no-sandbox', '--disable-dev-shm-usage'] });
+const page = await browser.newPage();
+const errors=[]; page.on('console', msg=>{ if(msg.type()==='error') errors.push(msg.text()) }); page.on('pageerror', e=>errors.push(e.message));
+await page.setViewport({ width: 1365, height: 900 });
+await page.goto('http://127.0.0.1:5173', { waitUntil: 'networkidle0' });
+const before = await page.$$eval('.country', els => els.map(el => el.getAttribute('d')).filter(Boolean).join('|').slice(0, 5000));
+const box = await page.$eval('.globe-stage svg', (el) => { const r = el.getBoundingClientRect(); return { x: r.x, y: r.y, width: r.width, height: r.height }; });
+await page.mouse.move(box.x + box.width * 0.52, box.y + box.height * 0.5);
+await page.mouse.down();
+await page.mouse.move(box.x + box.width * 0.72, box.y + box.height * 0.43, { steps: 12 });
+await page.mouse.up();
+await new Promise(r => setTimeout(r, 300));
+const after = await page.$$eval('.country', els => els.map(el => el.getAttribute('d')).filter(Boolean).join('|').slice(0, 5000));
+await page.screenshot({ path: '/workspace/agent/history-borders-drag-refined.png', fullPage: true });
+const metrics = await page.evaluate(() => ({ scrollWidth: document.documentElement.scrollWidth, innerWidth: window.innerWidth, h1: document.querySelector('h1')?.textContent }));
+console.log(JSON.stringify({ rotated: before !== after, beforeLen: before.length, afterLen: after.length, metrics, errors }, null, 2));
+await browser.close();

@@ -1,7 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { geoCentroid, geoDistance, geoGraticule10, geoOrthographic, geoPath } from 'd3-geo'
-import { select } from 'd3-selection'
-import { zoom, type D3ZoomEvent } from 'd3-zoom'
 import { feature } from 'topojson-client'
 import type { Arc, GeometryObject, Topology } from 'topojson-specification'
 import type { Empire, EmpireSnapshot, HistoricalEvent, KeyLocation } from '../types/history'
@@ -45,6 +43,7 @@ export function HistoryGlobe({ empire, snapshot, activeEvent, visibleEvents, sho
   const [rotation, setRotation] = useState<[number, number, number]>([-12, -18, 0])
   const [scale, setScale] = useState(initialScale)
   const svgRef = useRef<SVGSVGElement | null>(null)
+  const dragRef = useRef<{ readonly x: number; readonly y: number; readonly rotation: [number, number, number] } | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -63,24 +62,55 @@ export function HistoryGlobe({ empire, snapshot, activeEvent, visibleEvents, sho
     if (Number.isFinite(target[0]) && Number.isFinite(target[1])) setRotation([-target[0], -target[1], 0])
   }, [snapshot, activeEvent])
 
-  useEffect(() => {
-    if (!svgRef.current) return
-    const behaviour = zoom<SVGSVGElement, unknown>()
-      .scaleExtent([0.82, 2.3])
-      .on('zoom', (event: D3ZoomEvent<SVGSVGElement, unknown>) => setScale(initialScale * event.transform.k))
-    select(svgRef.current).call(behaviour)
-  }, [])
-
   const projection = useMemo(() => geoOrthographic().scale(scale).translate([width / 2, height / 2]).rotate(rotation).clipAngle(90), [rotation, scale])
   const path = useMemo(() => geoPath(projection), [projection])
   const listedEvents = visibleEvents.slice(-5)
 
   function rotateBy(delta: number): void { setRotation(([lambda, phi, gamma]) => [lambda + delta, phi, gamma]) }
 
+  function startDrag(clientX: number, clientY: number): void {
+    dragRef.current = { x: clientX, y: clientY, rotation }
+  }
+
+  function updateDrag(clientX: number, clientY: number): void {
+    const drag = dragRef.current
+    if (!drag) return
+    const sensitivity = 0.22 * (initialScale / scale)
+    const nextLambda = drag.rotation[0] + (clientX - drag.x) * sensitivity
+    const nextPhi = Math.max(-78, Math.min(78, drag.rotation[1] - (clientY - drag.y) * sensitivity))
+    setRotation([nextLambda, nextPhi, drag.rotation[2]])
+  }
+
+  function stopDrag(): void {
+    dragRef.current = null
+  }
+
+  function handlePointerDown(event: React.PointerEvent<SVGSVGElement>): void {
+    event.currentTarget.setPointerCapture(event.pointerId)
+    startDrag(event.clientX, event.clientY)
+  }
+
+  function handlePointerMove(event: React.PointerEvent<SVGSVGElement>): void { updateDrag(event.clientX, event.clientY) }
+
+  function handlePointerUp(event: React.PointerEvent<SVGSVGElement>): void {
+    stopDrag()
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId)
+  }
+
+  function handleMouseDown(event: React.MouseEvent<SVGSVGElement>): void { startDrag(event.clientX, event.clientY) }
+  function handleMouseMove(event: React.MouseEvent<SVGSVGElement>): void { updateDrag(event.clientX, event.clientY) }
+  function handleMouseUp(): void { stopDrag() }
+
+  function handleWheel(event: React.WheelEvent<SVGSVGElement>): void {
+    event.preventDefault()
+    const direction = event.deltaY > 0 ? -1 : 1
+    setScale((current) => Math.max(initialScale * 0.82, Math.min(initialScale * 2.3, current + direction * 18)))
+  }
+
   return (
     <section className="globe-panel" aria-label="Historical globe visualisation">
       <div className="globe-stage">
-        <svg ref={svgRef} viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`${empire.name} around ${formatYear(snapshot.year)}`}>
+        <svg ref={svgRef} viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`${empire.name} around ${formatYear(snapshot.year)}`} onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp} onPointerCancel={handlePointerUp} onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp} onWheel={handleWheel}>
           <defs>
             <radialGradient id="ocean" cx="38%" cy="28%" r="72%">
               <stop offset="0%" stopColor="#293747" />
@@ -90,6 +120,7 @@ export function HistoryGlobe({ empire, snapshot, activeEvent, visibleEvents, sho
             <filter id="softGlow"><feGaussianBlur stdDeviation="2.5" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
           </defs>
           <circle cx={width / 2} cy={height / 2} r={scale} fill="url(#ocean)" className="ocean" />
+          <circle cx={width / 2} cy={height / 2} r={scale - 0.5} className="globe-hit-area" />
           <path d={path(geoGraticule10()) ?? undefined} className="graticule" />
           {world && (
             <clipPath id="landClip">
