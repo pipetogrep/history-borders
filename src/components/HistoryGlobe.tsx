@@ -91,8 +91,14 @@ export function HistoryGlobe({ empire, snapshot, activeEvent, visibleEvents, sho
           </defs>
           <circle cx={width / 2} cy={height / 2} r={scale} fill="url(#ocean)" className="ocean" />
           <path d={path(geoGraticule10()) ?? undefined} className="graticule" />
+          {world && (
+            <clipPath id="landClip">
+              {world.features.map((country, index) => <path key={index} d={path(country) ?? undefined} />)}
+            </clipPath>
+          )}
           {world?.features.map((country, index) => <path key={index} d={path(country) ?? undefined} className="country" />)}
-          <path d={path(snapshot.extent) ?? undefined} className="empire-extent" style={{ '--empire-colour': empire.colour } as React.CSSProperties} />
+          <path d={path(snapshot.extent) ?? undefined} className="empire-extent empire-waterline" style={{ '--empire-colour': empire.colour } as React.CSSProperties} />
+          <path d={path(snapshot.extent) ?? undefined} className="empire-extent empire-land" clipPath="url(#landClip)" style={{ '--empire-colour': empire.colour } as React.CSSProperties} />
         </svg>
 
         {showLocations && empire.locations.map((location) => {

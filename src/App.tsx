@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { BookOpen, Crosshair, Map, Search } from 'lucide-react'
+import { BookOpen, Crosshair, Search } from 'lucide-react'
 import './App.css'
 import { HistoryGlobe } from './components/HistoryGlobe'
 import { empires } from './data/empires'
@@ -13,6 +13,14 @@ function formatYear(year: number): string { return year < 0 ? `${Math.abs(year)}
 
 function closestSnapshotIndex(snapshots: readonly EmpireSnapshot[], year: number): number {
   return snapshots.reduce((best, snapshot, index) => Math.abs(snapshot.year - year) < Math.abs(snapshots[best].year - year) ? index : best, 0)
+}
+
+function eventImplication(event: HistoricalEvent, currentSnapshot: EmpireSnapshot): string {
+  if (event.type === 'battle' || event.type === 'war') return 'Military event: use it as a territorial-pressure marker, not proof that the whole highlighted region changed hands that year.'
+  if (event.type === 'treaty') return 'Diplomatic/legal event: this is the kind of moment that can redraw recognised borders or formal administration.'
+  if (event.type === 'expansion') return 'Expansion marker: the nearest map snapshot shows the broader territorial consequence around this date.'
+  if (event.type === 'decline') return 'Contraction marker: compare this point with earlier ticks to see where authority or control has narrowed.'
+  return 'Context marker for the selected map snapshot: ' + currentSnapshot.label + '.'
 }
 
 function App(): React.JSX.Element {
@@ -48,57 +56,45 @@ function App(): React.JSX.Element {
   }
 
   return (
-    <main>
-      <section className="hero-shell" id="top">
-        <nav className="topbar" aria-label="Primary">
-          <a className="brand" href="#top" aria-label="history-borders home"><span className="brand-mark">hb</span><span>history-borders</span></a>
-          <a href="#explore">Explore</a>
-        </nav>
-        <div className="hero-grid">
-          <div className="hero-copy">
-            <p className="eyebrow">Historical borders, battles, and power</p>
-            <h1>See empires as moving systems, not static maps.</h1>
-            <p className="lede">Follow territorial change through dated snapshots. Scrub the timeline, jump to battles, and watch the globe re-centre around the event that changed the map.</p>
+    <main className="app-shell">
+      <section className="map-workspace" id="explore">
+        <header className="app-bar">
+          <a className="brand" href="#explore" aria-label="history-borders home"><span className="brand-mark">hb</span><span>history-borders</span></a>
+          <div className="top-controls" aria-label="Map layer toggles">
+            <label><input type="checkbox" checked={showEvents} onChange={(event) => setShowEvents(event.target.checked)} /> events</label>
+            <label><input type="checkbox" checked={showLocations} onChange={(event) => setShowLocations(event.target.checked)} /> places</label>
           </div>
-          <div className="hero-card" aria-label="Dataset summary">
-            <Map />
-            <h2>{empires.length} empires · {empires.reduce((total, empire) => total + empire.events.length, 0)} events</h2>
-            <p>Early prototype data now focuses on battles, capitals, expansion points, and historically legible transitions.</p>
-          </div>
-        </div>
-      </section>
+        </header>
 
-      <section className="controls-shell" id="explore" aria-label="Explorer controls">
-        <div>
-          <p className="eyebrow">Choose a polity</p>
-          <div className="empire-tabs" role="tablist" aria-label="Choose an empire">
+        <aside className="left-rail" aria-label="Choose a historical track">
+          <p className="eyebrow">Tracks</p>
+          <div className="empire-tabs" role="tablist" aria-label="Choose an empire or state formation track">
             {empires.map((empire) => (
-              <button key={empire.id} type="button" role="tab" aria-selected={empire.id === selectedEmpire.id} className={empire.id === selectedEmpire.id ? 'active' : ''} onClick={() => selectEmpire(empire.id)} style={{ '--accent': empire.colour } as React.CSSProperties}>{empire.name}</button>
+              <button key={empire.id} type="button" role="tab" aria-selected={empire.id === selectedEmpire.id} className={empire.id === selectedEmpire.id ? 'active' : ''} onClick={() => selectEmpire(empire.id)} style={{ '--accent': empire.colour } as React.CSSProperties}>
+                <span>{empire.name}</span>
+                <small>{empire.period}</small>
+              </button>
             ))}
           </div>
-        </div>
-        <div className="toggles" aria-label="Map layer toggles">
-          <label><input type="checkbox" checked={showEvents} onChange={(event) => setShowEvents(event.target.checked)} /> Battles & events</label>
-          <label><input type="checkbox" checked={showLocations} onChange={(event) => setShowLocations(event.target.checked)} /> Places</label>
-        </div>
-      </section>
+        </aside>
 
-      <HistoryGlobe empire={selectedEmpire} snapshot={snapshot} activeEvent={activeEvent} visibleEvents={visibleEvents} showEvents={showEvents} showLocations={showLocations} onSelectEvent={selectEvent} onSelectLocation={(location) => setInspectorItem({ kind: 'location', value: location })} />
+        <HistoryGlobe empire={selectedEmpire} snapshot={snapshot} activeEvent={activeEvent} visibleEvents={visibleEvents} showEvents={showEvents} showLocations={showLocations} onSelectEvent={selectEvent} onSelectLocation={(location) => setInspectorItem({ kind: 'location', value: location })} />
 
-      <section className="timeline-shell" aria-label="Time controls">
-        <div className="timeline-head">
-          <div><p className="eyebrow">Timeline controls map state</p><h2>{selectedEmpire.name}</h2></div>
-          <p>{selectedEmpire.period}</p>
-        </div>
-        <input type="range" min="0" max={selectedEmpire.snapshots.length - 1} step="1" value={snapshotIndex} onChange={(event) => selectSnapshot(Number(event.target.value))} aria-label="Choose historical snapshot" />
-        <div className="timeline-labels">{selectedEmpire.snapshots.map((item) => <span key={item.year}>{formatYear(item.year)}</span>)}</div>
-        <div className="event-rail" aria-label="Jump to event">
-          {selectedEmpire.events.map((event) => (
-            <button key={event.id} type="button" className={activeEventId === event.id ? 'active' : ''} onClick={() => selectEvent(event)}>
-              <span>{formatYear(event.year)}</span>{event.title}
-            </button>
-          ))}
-        </div>
+        <section className="timeline-shell" aria-label="Time controls">
+          <div className="timeline-head">
+            <div><p className="eyebrow">{formatYear(snapshot.year)}</p><h1>{selectedEmpire.name}: {snapshot.label}</h1></div>
+            <p>{snapshot.note}</p>
+          </div>
+          <input type="range" min="0" max={selectedEmpire.snapshots.length - 1} step="1" value={snapshotIndex} onChange={(event) => selectSnapshot(Number(event.target.value))} aria-label="Choose historical snapshot" />
+          <div className="timeline-labels">{selectedEmpire.snapshots.map((item) => <span key={item.year}>{formatYear(item.year)}</span>)}</div>
+          <div className="event-rail" aria-label="Jump to event">
+            {selectedEmpire.events.map((event) => (
+              <button key={event.id} type="button" className={activeEventId === event.id ? 'active' : ''} onClick={() => selectEvent(event)}>
+                <span>{formatYear(event.year)}</span>{event.title}
+              </button>
+            ))}
+          </div>
+        </section>
       </section>
 
       <section className="details-grid">
@@ -111,11 +107,11 @@ function App(): React.JSX.Element {
         <aside className="inspector" aria-live="polite">
           <p className="eyebrow">Selected detail</p>
           {inspectorItem ? inspectorItem.kind === 'event' ? (
-            <><Crosshair /><h2>{inspectorItem.value.title}</h2><p className="year">{formatYear(inspectorItem.value.year)} · {inspectorItem.value.type}</p><p>{inspectorItem.value.summary}</p></>
+            <><Crosshair /><h2>{inspectorItem.value.title}</h2><p className="year">{formatYear(inspectorItem.value.year)} · {inspectorItem.value.type}</p><p>{inspectorItem.value.summary}</p><dl className="event-facts"><div><dt>Map relation</dt><dd>{eventImplication(inspectorItem.value, snapshot)}</dd></div><div><dt>Location</dt><dd>{inspectorItem.value.location.lat.toFixed(2)}, {inspectorItem.value.location.lon.toFixed(2)}</dd></div><div><dt>Current layer</dt><dd>{selectedEmpire.name} · {snapshot.label} · {formatYear(snapshot.year)}</dd></div></dl>{inspectorItem.value.source && <p className="source-note">Source: {inspectorItem.value.source}</p>}</>
           ) : (
             <><Search /><h2>{inspectorItem.value.name}</h2><p>{inspectorItem.value.note}</p></>
           ) : (
-            <><Search /><h2>Select a battle or place.</h2><p>The timeline, globe and inspector are linked. Pick an event below the map to jump to its moment and location.</p></>
+            <><Search /><h2>No selection</h2><p>Click a timeline event, battle marker, or place marker to inspect the historical claim behind the map.</p></>
           )}
         </aside>
       </section>

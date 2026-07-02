@@ -57,6 +57,41 @@ const abbasid750 = polygon([[-7, 34], [15, 37], [38, 41], [64, 39], [76, 30], [7
 const abbasid850 = polygon([[-9, 35], [18, 41], [47, 42], [78, 36], [83, 25], [65, 16], [35, 13], [4, 19], [-10, 28], [-9, 35]])
 const abbasid1100 = polygon([[34, 38], [48, 40], [60, 35], [58, 28], [46, 25], [36, 29], [34, 38]])
 
+
+const usColonies = polygon([[-81, 45], [-70, 46], [-67, 41], [-75, 33], [-81, 31], [-84, 36], [-81, 45]])
+const us1783 = polygon([[-89, 48], [-73, 46], [-67, 44], [-70, 31], [-81, 30], [-88, 36], [-89, 48]])
+const us1803 = polygon([[-112, 49], [-89, 49], [-88, 36], [-94, 29], [-106, 31], [-113, 41], [-112, 49]])
+const us1848 = polygon([[-124, 49], [-67, 45], [-80, 25], [-97, 26], [-118, 32], [-125, 42], [-124, 49]])
+const us1959 = multi([
+  polygon([[-124, 49], [-67, 45], [-80, 25], [-97, 26], [-118, 32], [-125, 42], [-124, 49]]),
+  polygon([[-169, 71], [-140, 70], [-131, 55], [-154, 51], [-170, 60], [-169, 71]]),
+  polygon([[-161, 23], [-154, 23], [-154, 18], [-161, 18], [-161, 23]]),
+])
+
+
+const yugoslavia1918 = polygon([[13, 46], [20, 47], [24, 45], [23, 41], [19, 40], [14, 43], [13, 46]])
+const yugoslavia1945 = polygon([[13, 46.6], [19, 47], [23.5, 44.5], [22.5, 41.5], [18, 40.5], [14, 43], [13, 46.6]])
+const bosnia1992 = polygon([[15.7, 45.2], [19.6, 44.8], [19.4, 42.6], [17.6, 42.3], [15.6, 43.2], [15.7, 45.2]])
+const bosniaDayton = multi([
+  polygon([[15.8, 45.0], [18.5, 44.7], [18.3, 43.2], [16.0, 43.1], [15.8, 45.0]]),
+  polygon([[18.0, 45.1], [19.6, 44.7], [19.4, 42.6], [18.0, 43.0], [18.0, 45.1]]),
+])
+const ukraine1991 = polygon([[22, 52], [32, 52.4], [40, 49.5], [39, 45.8], [34, 44.4], [29, 45.2], [23, 47.8], [22, 52]])
+const crimea = polygon([[32.4, 46.2], [36.7, 45.7], [36.2, 44.5], [33.4, 44.4], [32.4, 46.2]])
+const donbas2014 = polygon([[37.0, 49.6], [40.1, 49.2], [39.8, 47.1], [37.2, 47.2], [37.0, 49.6]])
+const ru2022Max = multi([
+  crimea,
+  donbas2014,
+  polygon([[30.0, 52.2], [37.8, 52.0], [39.4, 50.3], [36.0, 49.7], [31.0, 50.4], [30.0, 52.2]]),
+  polygon([[31.6, 47.8], [37.2, 47.6], [37.0, 45.8], [32.6, 45.6], [31.6, 47.8]]),
+])
+const ru2026Control = multi([
+  crimea,
+  polygon([[36.6, 49.8], [40.2, 49.3], [39.9, 46.8], [36.5, 46.9], [36.6, 49.8]]),
+  polygon([[32.0, 47.6], [37.1, 47.4], [36.9, 45.7], [32.5, 45.6], [32.0, 47.6]]),
+  polygon([[34.8, 51.3], [36.0, 51.2], [36.1, 50.4], [34.8, 50.5], [34.8, 51.3]]),
+])
+
 export const empires: readonly Empire[] = [
   {
     id: 'roman', name: 'Roman Empire', colour: '#b77946', period: '27 BCE–476 CE / 1453 CE in the east',
@@ -130,6 +165,36 @@ export const empires: readonly Empire[] = [
       { year: 1922, label: 'Imperial peak', extent: britishPeak, note: 'The empire reaches its largest post-war territorial configuration.' },
     ],
   },
+
+  {
+    id: 'united-states', name: 'United States', colour: '#8d8475', period: '1776–present',
+    headline: 'The United States formed through revolution, treaties, purchases, wars, forced removals, annexations, and state admissions.',
+    caveat: 'This track distinguishes internationally recognised boundaries from internal territorial organisation; Indigenous nations and sovereignty require deeper dedicated layers.',
+    sources: ['United States territorial acquisitions', 'Treaty of Paris (1783)', 'Louisiana Purchase', 'Mexican Cession', 'American Civil War'],
+    locations: [
+      { name: 'Philadelphia', lat: 39.9526, lon: -75.1652, note: 'Declaration of Independence and early federal capital.' },
+      { name: 'Washington, D.C.', lat: 38.9072, lon: -77.0369, note: 'Federal capital from 1800.' },
+      { name: 'New Orleans', lat: 29.9511, lon: -90.0715, note: 'Strategic Mississippi port central to the Louisiana Purchase.' },
+      { name: 'Gettysburg', lat: 39.8309, lon: -77.2311, note: 'Major Civil War battlefield.' },
+    ],
+    events: [
+      { id: 'declaration', year: 1776, title: 'Declaration of Independence', type: 'capital', summary: 'Thirteen colonies declare independence from Britain.', location: { lat: 39.9526, lon: -75.1652 } },
+      { id: 'saratoga', year: 1777, title: 'Battles of Saratoga', type: 'battle', summary: 'American victory helps secure French support during the Revolutionary War.', location: { lat: 43.0, lon: -73.65 } },
+      { id: 'yorktown-us', year: 1781, title: 'Siege of Yorktown', type: 'battle', summary: 'Franco-American victory leads toward British recognition of independence.', location: { lat: 37.24, lon: -76.51 } },
+      { id: 'paris-1783', year: 1783, title: 'Treaty of Paris', type: 'treaty', summary: 'Britain recognises U.S. independence and a boundary to the Mississippi River.', location: { lat: 48.8566, lon: 2.3522 } },
+      { id: 'louisiana', year: 1803, title: 'Louisiana Purchase', type: 'expansion', summary: 'The U.S. purchases France’s claim to Louisiana, dramatically expanding westward.', location: { lat: 29.9511, lon: -90.0715 } },
+      { id: 'mexican-cession', year: 1848, title: 'Treaty of Guadalupe Hidalgo', type: 'treaty', summary: 'The Mexican-American War settlement transfers a vast western territory to the U.S.', location: { lat: 19.4, lon: -99.13 } },
+      { id: 'gettysburg', year: 1863, title: 'Battle of Gettysburg', type: 'battle', summary: 'A decisive Union victory during the American Civil War.', location: { lat: 39.8309, lon: -77.2311 } },
+      { id: 'alaska-hawaii', year: 1959, title: 'Alaska and Hawaii become states', type: 'expansion', summary: 'Statehood for Alaska and Hawaii completes the current 50-state configuration.', location: { lat: 21.3069, lon: -157.8583 } },
+    ],
+    snapshots: [
+      { year: 1776, label: 'Thirteen colonies revolt', extent: multi([usColonies]), note: 'The independence movement begins along the Atlantic seaboard.' },
+      { year: 1783, label: 'Recognised independence', extent: multi([us1783]), note: 'The Treaty of Paris recognises U.S. independence to the Mississippi River.' },
+      { year: 1803, label: 'Louisiana Purchase', extent: multi([us1783, us1803]), note: 'A purchase from France doubles the claimed territorial span.' },
+      { year: 1848, label: 'Continental expansion', extent: multi([us1848]), note: 'War, treaty, annexation, and settlement create a coast-to-coast republic.' },
+      { year: 1959, label: 'Fifty-state configuration', extent: us1959, note: 'Alaska and Hawaii enter the union, producing the current state count.' },
+    ],
+  },
   {
     id: 'ottoman', name: 'Ottoman Empire', colour: '#8f5a55', period: '1299–1922',
     headline: 'Ottoman frontiers moved through Balkan, Anatolian, Arab, and Mediterranean theatres over six centuries.',
@@ -151,6 +216,63 @@ export const empires: readonly Empire[] = [
       { year: 1453, label: 'Bosphorus empire', extent: multi([ottoman1453]), note: 'Anatolia and the Balkans are tied through the conquest of Constantinople.' },
       { year: 1566, label: 'Classical high point', extent: multi([ottoman1566]), note: 'Suleiman’s reign frames a wide Ottoman reach across three continents.' },
       { year: 1914, label: 'Late empire', extent: multi([ottoman1914]), note: 'The empire is reduced but still controls Anatolia and Arab provinces.' },
+    ],
+  },
+
+
+  {
+    id: 'russia-ukraine', name: 'Russia / Ukraine', colour: '#8d5d58', period: '1991–present',
+    headline: 'Ukraine’s internationally recognised borders have remained central to the post-Soviet order while Russian occupation and control lines have shifted since 2014.',
+    caveat: 'This is not a recognition map. Red overlays show approximate Russian occupation/control or claimed control at selected moments; internationally recognised Ukrainian borders are not redrawn.',
+    sources: ['Ukraine independence referendum, 1991', 'Annexation of Crimea by the Russian Federation', 'War in Donbas', '2022 Russian invasion of Ukraine', 'ISW assessed control of terrain July 1 2026', 'Russia Matters war report card July 1 2026'],
+    locations: [
+      { name: 'Kyiv', lat: 50.4501, lon: 30.5234, note: 'Capital of independent Ukraine.' },
+      { name: 'Crimea', lat: 45.3, lon: 34.4, note: 'Occupied and annexed by Russia in 2014; annexation is widely internationally unrecognised.' },
+      { name: 'Donetsk', lat: 48.0159, lon: 37.8028, note: 'Major Donbas city under Russian-backed/Russian control since 2014.' },
+      { name: 'Kherson', lat: 46.6354, lon: 32.6169, note: 'Occupied in 2022 and recaptured by Ukraine in November 2022.' },
+    ],
+    events: [
+      { id: 'ukraine-1991', year: 1991, title: 'Ukrainian independence', type: 'treaty', summary: 'Ukraine declares independence and later confirms it by referendum within recognised Soviet republican borders.', location: { lat: 50.4501, lon: 30.5234 }, source: 'Ukraine independence referendum, 1991' },
+      { id: 'budapest', year: 1994, title: 'Budapest Memorandum', type: 'treaty', summary: 'Ukraine gives up nuclear weapons in exchange for security assurances respecting its sovereignty and existing borders.', location: { lat: 47.4979, lon: 19.0402 }, source: 'Budapest Memorandum' },
+      { id: 'crimea-2014', year: 2014, title: 'Crimea occupied and annexed', type: 'war', summary: 'Russia occupies and annexes Crimea; most states continue to recognise Crimea as part of Ukraine.', location: { lat: 45.3, lon: 34.4 }, source: 'Annexation of Crimea by the Russian Federation' },
+      { id: 'donbas-2014', year: 2014, title: 'War in Donbas begins', type: 'war', summary: 'Russian-backed separatist control emerges in parts of Donetsk and Luhansk oblasts.', location: { lat: 48.0159, lon: 37.8028 }, source: 'War in Donbas' },
+      { id: 'invasion-2022', year: 2022, title: 'Full-scale invasion', type: 'war', summary: 'Russia launches a multi-axis invasion from Russia, Belarus, occupied Crimea, and occupied Donbas.', location: { lat: 50.4501, lon: 30.5234 }, source: '2022 Russian invasion of Ukraine' },
+      { id: 'kherson-2022', year: 2022, title: 'Kherson recaptured', type: 'battle', summary: 'Ukrainian forces recapture Kherson city, shifting the southern control line to the Dnipro River area.', location: { lat: 46.6354, lon: 32.6169 }, source: '2022 Kherson counteroffensive' },
+      { id: 'july-2026', year: 2026, title: 'Assessed control, July 2026', type: 'war', summary: 'Open-source assessments report Russia controlling roughly one fifth of Ukraine including Crimea and occupied parts of eastern/southern oblasts, with small 2026 net changes.', location: { lat: 48.0, lon: 37.8 }, source: 'ISW and Russia Matters, July 1 2026' },
+    ],
+    snapshots: [
+      { year: 1991, label: 'Recognised independent Ukraine', extent: multi([ukraine1991]), note: 'Ukraine becomes independent within internationally recognised borders.' },
+      { year: 2014, label: 'Crimea and Donbas occupation', extent: multi([crimea, donbas2014]), note: 'Occupation/control overlays appear in Crimea and parts of Donbas; this does not redraw recognised borders.' },
+      { year: 2022, label: 'Full-scale invasion maximum', extent: ru2022Max, note: 'Approximate early-2022 Russian axes and occupied/control areas before later Ukrainian counteroffensives.' },
+      { year: 2026, label: 'Assessed occupation/control', extent: ru2026Control, note: 'Approximate current control/occupation layer based on open-source assessments as of early July 2026.' },
+    ],
+  },
+  {
+    id: 'bosnia-yugoslavia', name: 'Bosnia / Yugoslavia', colour: '#8a7f62', period: '1878–1995',
+    headline: 'Bosnia and Herzegovina emerged from overlapping Ottoman, Habsburg, Yugoslav, nationalist, and international settlement frameworks.',
+    caveat: 'This track is a formation story. Internal wartime control lines and Dayton entity boundaries are simplified and should be treated as interpretive, not cadastral.',
+    sources: ['Congress of Berlin', 'Bosnian Crisis', 'Assassination of Archduke Franz Ferdinand', 'Breakup of Yugoslavia', 'Bosnian War', 'Dayton Agreement'],
+    locations: [
+      { name: 'Sarajevo', lat: 43.8563, lon: 18.4131, note: 'Bosnian capital; site of the 1914 assassination and the 1992–1996 siege.' },
+      { name: 'Srebrenica', lat: 44.1075, lon: 19.2975, note: 'Site of the 1995 genocide.' },
+      { name: 'Dayton', lat: 39.7589, lon: -84.1916, note: 'Negotiation site for the Dayton Peace Agreement.' },
+    ],
+    events: [
+      { id: 'berlin-1878', year: 1878, title: 'Congress of Berlin', type: 'treaty', summary: 'Austria-Hungary is permitted to occupy and administer Bosnia and Herzegovina while Ottoman sovereignty formally remains.', location: { lat: 52.52, lon: 13.405 }, source: 'Congress of Berlin' },
+      { id: 'annexation-1908', year: 1908, title: 'Bosnian annexation crisis', type: 'treaty', summary: 'Austria-Hungary formally annexes Bosnia and Herzegovina, provoking a European diplomatic crisis.', location: { lat: 43.8563, lon: 18.4131 }, source: 'Bosnian Crisis' },
+      { id: 'sarajevo-1914', year: 1914, title: 'Sarajevo assassination', type: 'war', summary: 'The assassination of Archduke Franz Ferdinand in Sarajevo becomes the immediate trigger for the July Crisis and World War I.', location: { lat: 43.8563, lon: 18.4131 }, source: 'Assassination of Archduke Franz Ferdinand' },
+      { id: 'yugoslavia-1918', year: 1918, title: 'Kingdom of Serbs, Croats and Slovenes', type: 'capital', summary: 'South Slavic territories are reorganised into a new kingdom later known as Yugoslavia.', location: { lat: 44.8125, lon: 20.4612 }, source: 'Creation of Yugoslavia' },
+      { id: 'avnoj-1943', year: 1943, title: 'AVNOJ federal framework', type: 'capital', summary: 'Partisan wartime institutions frame Bosnia and Herzegovina as a federal republic within socialist Yugoslavia.', location: { lat: 44.34, lon: 17.27 }, source: 'AVNOJ' },
+      { id: 'bosnia-independence', year: 1992, title: 'Bosnian independence', type: 'treaty', summary: 'Bosnia and Herzegovina declares independence as Yugoslavia breaks apart; war follows.', location: { lat: 43.8563, lon: 18.4131 }, source: 'Bosnian independence referendum' },
+      { id: 'srebrenica', year: 1995, title: 'Srebrenica genocide', type: 'battle', summary: 'Bosnian Serb forces kill more than 8,000 Bosniak men and boys after taking the UN-declared safe area.', location: { lat: 44.1075, lon: 19.2975 }, source: 'Srebrenica genocide' },
+      { id: 'dayton', year: 1995, title: 'Dayton Agreement', type: 'treaty', summary: 'The peace agreement ends the Bosnian War and establishes Bosnia and Herzegovina’s post-war constitutional structure.', location: { lat: 39.7589, lon: -84.1916 }, source: 'Dayton Agreement' },
+    ],
+    snapshots: [
+      { year: 1878, label: 'Habsburg administration', extent: multi([bosnia1992]), note: 'Bosnia and Herzegovina moves from Ottoman administration into Austro-Hungarian occupation.' },
+      { year: 1918, label: 'First Yugoslav state', extent: multi([yugoslavia1918]), note: 'Bosnia becomes part of the new South Slavic kingdom after World War I.' },
+      { year: 1945, label: 'Socialist federation', extent: multi([yugoslavia1945]), note: 'Bosnia and Herzegovina is one republic inside socialist Yugoslavia.' },
+      { year: 1992, label: 'Independence and war', extent: multi([bosnia1992]), note: 'International recognition and war create a contested sovereignty crisis.' },
+      { year: 1995, label: 'Dayton settlement', extent: bosniaDayton, note: 'The post-war state is preserved but internally structured by the Dayton settlement.' },
     ],
   },
   {
