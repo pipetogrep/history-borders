@@ -1,0 +1,16 @@
+import puppeteer from 'puppeteer-core';
+const browser = await puppeteer.launch({ executablePath: '/usr/bin/chromium', args: ['--no-sandbox', '--disable-dev-shm-usage'] });
+const page = await browser.newPage();
+const errors = [];
+page.on('console', msg => { if (msg.type() === 'error') errors.push(msg.text()); });
+page.on('pageerror', err => errors.push(err.message));
+await page.setViewport({ width: 1365, height: 900, deviceScaleFactor: 1 });
+await page.goto('http://127.0.0.1:5173', { waitUntil: 'networkidle0' });
+await page.screenshot({ path: '/workspace/agent/history-borders-desktop.png', fullPage: true });
+const desktop = await page.evaluate(() => ({ title: document.title, h1: document.querySelector('h1')?.textContent, scrollWidth: document.documentElement.scrollWidth, innerWidth: window.innerWidth }));
+await page.setViewport({ width: 768, height: 1024, deviceScaleFactor: 1 });
+await page.reload({ waitUntil: 'networkidle0' });
+await page.screenshot({ path: '/workspace/agent/history-borders-tablet.png', fullPage: true });
+const tablet = await page.evaluate(() => ({ scrollWidth: document.documentElement.scrollWidth, innerWidth: window.innerWidth }));
+console.log(JSON.stringify({ desktop, tablet, errors }, null, 2));
+await browser.close();
