@@ -10,11 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "d3-ease": "^3.0.1",
     "d3-geo": "^3.1.1",
-    "d3-selection": "^3.0.0",
-    "d3-transition": "^3.0.1",
-    "d3-zoom": "^3.0.0",
     "lucide-react": "^1.23.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
@@ -23,9 +19,6 @@
   },
   "devDependencies": {
     "@types/d3-geo": "^3.1.0",
-    "@types/d3-selection": "^3.0.11",
-    "@types/d3-transition": "^3.0.9",
-    "@types/d3-zoom": "^3.0.8",
     "@types/geojson": "^7946.0.16",
     "@types/node": "^24.13.2",
     "@types/react": "^19.2.17",

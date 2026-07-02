@@ -44,6 +44,7 @@ export function HistoryGlobe({ empire, snapshot, activeEvent, visibleEvents, sho
   const [scale, setScale] = useState(initialScale)
   const svgRef = useRef<SVGSVGElement | null>(null)
   const dragRef = useRef<{ readonly x: number; readonly y: number; readonly rotation: [number, number, number] } | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -70,6 +71,7 @@ export function HistoryGlobe({ empire, snapshot, activeEvent, visibleEvents, sho
 
   function startDrag(clientX: number, clientY: number): void {
     dragRef.current = { x: clientX, y: clientY, rotation }
+    setIsDragging(true)
   }
 
   function updateDrag(clientX: number, clientY: number): void {
@@ -83,6 +85,7 @@ export function HistoryGlobe({ empire, snapshot, activeEvent, visibleEvents, sho
 
   function stopDrag(): void {
     dragRef.current = null
+    setIsDragging(false)
   }
 
   function handlePointerDown(event: React.PointerEvent<SVGSVGElement>): void {
@@ -97,10 +100,6 @@ export function HistoryGlobe({ empire, snapshot, activeEvent, visibleEvents, sho
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId)
   }
 
-  function handleMouseDown(event: React.MouseEvent<SVGSVGElement>): void { startDrag(event.clientX, event.clientY) }
-  function handleMouseMove(event: React.MouseEvent<SVGSVGElement>): void { updateDrag(event.clientX, event.clientY) }
-  function handleMouseUp(): void { stopDrag() }
-
   function handleWheel(event: React.WheelEvent<SVGSVGElement>): void {
     event.preventDefault()
     const direction = event.deltaY > 0 ? -1 : 1
@@ -109,15 +108,14 @@ export function HistoryGlobe({ empire, snapshot, activeEvent, visibleEvents, sho
 
   return (
     <section className="globe-panel" aria-label="Historical globe visualisation">
-      <div className="globe-stage">
-        <svg ref={svgRef} viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`${empire.name} around ${formatYear(snapshot.year)}`} onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp} onPointerCancel={handlePointerUp} onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp} onWheel={handleWheel}>
+      <div className={`globe-stage ${isDragging ? 'is-dragging' : ''}`}>
+        <svg ref={svgRef} viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`${empire.name} around ${formatYear(snapshot.year)}`} onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp} onPointerCancel={handlePointerUp} onLostPointerCapture={handlePointerUp} onWheel={handleWheel}>
           <defs>
             <radialGradient id="ocean" cx="38%" cy="28%" r="72%">
-              <stop offset="0%" stopColor="#293747" />
-              <stop offset="60%" stopColor="#16202b" />
-              <stop offset="100%" stopColor="#0c1118" />
+              <stop offset="0%" stopColor="#20221f" />
+              <stop offset="62%" stopColor="#111210" />
+              <stop offset="100%" stopColor="#070807" />
             </radialGradient>
-            <filter id="softGlow"><feGaussianBlur stdDeviation="2.5" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
           </defs>
           <circle cx={width / 2} cy={height / 2} r={scale} fill="url(#ocean)" className="ocean" />
           <circle cx={width / 2} cy={height / 2} r={scale - 0.5} className="globe-hit-area" />
@@ -146,15 +144,23 @@ export function HistoryGlobe({ empire, snapshot, activeEvent, visibleEvents, sho
           return <button key={event.id} type="button" className={`map-marker event-marker ${event.type} ${active ? 'active' : ''}`} style={{ left: `${(projected[0] / width) * 100}%`, top: `${(projected[1] / height) * 100}%` }} onClick={() => onSelectEvent(event)} aria-label={`Inspect ${event.title}`}><span /></button>
         })}
 
+        <div className="globe-hint">drag globe · scroll to zoom</div>
         <div className="globe-actions" aria-label="Globe controls">
-          <button type="button" onClick={() => rotateBy(-18)}>Rotate west</button>
-          <button type="button" onClick={() => rotateBy(18)}>Rotate east</button>
+          <button type="button" onClick={() => rotateBy(-18)} aria-label="Rotate globe west">←</button>
+          <button type="button" onClick={() => rotateBy(18)} aria-label="Rotate globe east">→</button>
         </div>
       </div>
-      <aside className="snapshot-card">
+      <aside className="snapshot-card" style={{ '--empire-colour': empire.colour } as React.CSSProperties}>
         <span className="eyebrow">{formatYear(snapshot.year)}</span>
         <h2>{snapshot.label}</h2>
         <p>{snapshot.note}</p>
+        {activeEvent && (
+          <div className="active-event-card">
+            <span>{formatYear(activeEvent.year)} · {activeEvent.type}</span>
+            <strong>{activeEvent.title}</strong>
+            <p>{activeEvent.summary}</p>
+          </div>
+        )}
         <div className="event-list">
           {listedEvents.map((event) => (
             <button key={event.id} type="button" className={activeEvent?.id === event.id ? 'active' : ''} onClick={() => onSelectEvent(event)}>

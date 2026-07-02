@@ -8,36 +8,44 @@
 .left-rail { grid-row: 2 / 4; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); padding: 12px; overflow: auto; }
 .eyebrow { margin: 0 0 10px; color: var(--subtle); text-transform: uppercase; font-weight: 800; letter-spacing: 0.14em; font-size: 0.62rem; }
 .empire-tabs { display: grid; gap: 7px; }
-.empire-tabs button { border: 1px solid var(--line); color: var(--text); background: rgba(17, 17, 16, 0.54); border-radius: 10px; padding: 10px; text-align: left; transition: border-color 150ms ease, background 150ms ease; }
+.empire-tabs button { border: 1px solid var(--line); color: var(--text); background: rgba(15, 15, 14, 0.62); border-radius: 10px; padding: 10px; text-align: left; transition: border-color 150ms ease, background 150ms ease; }
 .empire-tabs button:hover, .empire-tabs button:focus-visible { border-color: color-mix(in srgb, var(--accent) 70%, var(--line)); outline: none; }
 .empire-tabs .active { background: color-mix(in srgb, var(--accent) 16%, rgba(17, 17, 16, 0.88)); border-color: color-mix(in srgb, var(--accent) 72%, var(--line)); }
 .empire-tabs span { display: block; font-weight: 700; font-size: 0.88rem; }
 .empire-tabs small { display: block; margin-top: 4px; color: var(--quiet); font-size: 0.68rem; line-height: 1.35; }
 .globe-panel { min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) 316px; gap: 10px; align-items: stretch; }
-.globe-stage { position: relative; min-height: 590px; overflow: hidden; border: 1px solid var(--line); border-radius: 16px; background: #090a0b; }
+.globe-stage { position: relative; min-height: 590px; overflow: hidden; border: 1px solid var(--line); border-radius: 16px; background: radial-gradient(circle at 50% 42%, #11110f 0, #090908 68%); }
 .globe-stage svg { width: 100%; height: 100%; min-height: 590px; display: block; cursor: grab; touch-action: none; }
 .globe-stage svg:active { cursor: grabbing; }
+.globe-stage.is-dragging { border-color: rgba(214, 199, 165, 0.27); }
+.globe-stage.is-dragging .globe-hint { color: var(--text); border-color: rgba(214, 199, 165, 0.24); }
 .globe-hit-area { fill: transparent; pointer-events: all; }
 .ocean { filter: none; }
-.graticule { fill: none; stroke: rgba(222, 216, 205, 0.08); stroke-width: 0.65; }
-.country { fill: #20262b; stroke: rgba(209, 202, 190, 0.16); stroke-width: 0.48; }
-.empire-extent { fill: var(--empire-colour); fill-opacity: 0.42; stroke: var(--empire-colour); stroke-width: 1.55; filter: none; }
+.graticule { fill: none; stroke: rgba(232, 224, 210, 0.055); stroke-width: 0.55; }
+.country { fill: #1d211f; stroke: rgba(219, 210, 193, 0.13); stroke-width: 0.42; }
+.empire-extent { fill: var(--empire-colour); fill-opacity: 0.28; stroke: var(--empire-colour); stroke-width: 1; stroke-linejoin: round; stroke-linecap: round; paint-order: stroke fill; filter: none; }
 .empire-waterline { display: none; }
-.empire-land { stroke-opacity: 0.82; }
-.map-marker { position: absolute; translate: -50% -50%; width: 24px; height: 24px; padding: 0; border-radius: 999px; border: 1px solid rgba(223, 216, 204, 0.7); background: rgba(14, 14, 13, 0.55); display: grid; place-items: center; z-index: 3; }
-.map-marker span { width: 7px; height: 7px; border-radius: 999px; background: #d4c8b5; box-shadow: 0 0 0 5px rgba(212, 200, 181, 0.1); }
-.event-marker span { background: #c7a66b; box-shadow: 0 0 0 5px rgba(199, 166, 107, 0.14); }
-.event-marker.battle span, .event-marker.war span { background: #ad6b5e; box-shadow: 0 0 0 5px rgba(173, 107, 94, 0.15); }
-.event-marker.active { width: 32px; height: 32px; border-color: var(--paper); }
+.empire-land { stroke-opacity: 0.76; }
+.map-marker { position: absolute; translate: -50% -50%; width: 22px; height: 22px; padding: 0; border-radius: 999px; border: 1px solid rgba(222, 215, 202, 0.54); background: rgba(11, 11, 10, 0.5); display: grid; place-items: center; z-index: 3; }
+.map-marker span { width: 6px; height: 6px; border-radius: 999px; background: #d4c8b5; box-shadow: 0 0 0 5px rgba(212, 200, 181, 0.08); }
+.event-marker span { background: #b99b68; box-shadow: 0 0 0 5px rgba(185, 155, 104, 0.11); }
+.event-marker.battle span, .event-marker.war span { background: #a86f62; box-shadow: 0 0 0 5px rgba(168, 111, 98, 0.12); }
+.event-marker.active { width: 30px; height: 30px; border-color: var(--paper); background: rgba(8, 8, 7, 0.74); }
 .event-marker.active span { width: 10px; height: 10px; }
+.globe-hint { position: absolute; left: 14px; top: 14px; color: var(--quiet); border: 1px solid var(--line); border-radius: 999px; background: rgba(10, 10, 9, 0.54); padding: 7px 10px; font-size: 0.72rem; letter-spacing: 0.04em; text-transform: uppercase; }
 .globe-actions { position: absolute; left: 14px; bottom: 14px; display: flex; gap: 8px; }
-.globe-actions button { border: 1px solid var(--line); border-radius: 999px; background: rgba(18, 18, 17, 0.74); color: var(--text); padding: 7px 10px; font-size: 0.78rem; }
+.globe-actions button { display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid var(--line); border-radius: 999px; background: rgba(14, 14, 13, 0.72); color: var(--text); padding: 0; font-size: 0.9rem; }
 .snapshot-card { border: 1px solid var(--line); border-radius: 16px; background: var(--surface); padding: 16px; }
 .snapshot-card h2, .timeline-head h1, .empire-brief h2, .inspector h2 { margin: 0; color: var(--text-strong); letter-spacing: -0.025em; }
-.snapshot-card h2 { font-size: 1.05rem; }
+.snapshot-card h2 { font-size: 1rem; }
+.empire-brief h2, .inspector h2 { font-size: clamp(1.05rem, 1.35vw, 1.28rem); line-height: 1.28; max-width: 36rem; }
 .snapshot-card p, .empire-brief p, .inspector p, .timeline-head p { color: var(--muted); line-height: 1.55; font-size: 0.88rem; }
+.active-event-card { margin-top: 14px; border-left: 1px solid color-mix(in srgb, var(--empire-colour, var(--paper)) 64%, var(--line)); padding: 2px 0 2px 12px; }
+.active-event-card span { display: block; color: #b79b68; font-size: 0.66rem; font-weight: 800; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.08em; }
+.active-event-card strong { display: block; color: var(--text-strong); font-size: 0.92rem; line-height: 1.35; }
+.active-event-card p { margin: 6px 0 0; }
 .event-list { display: grid; gap: 7px; margin-top: 16px; }
-.event-list button { text-align: left; border: 1px solid var(--line); border-radius: 10px; padding: 9px; color: var(--text); background: var(--surface-soft); }
+.event-list button { text-align: left; border: 1px solid var(--line); border-radius: 10px; padding: 9px; color: var(--text); background: rgba(20, 20, 18, 0.52); }
 .event-list button.active, .event-rail button.active { border-color: #b79b68; background: rgba(183, 155, 104, 0.11); }
 .event-list span, .event-rail span { display: block; color: #b79b68; font-size: 0.66rem; font-weight: 800; margin-bottom: 4px; }
 .timeline-shell { grid-column: 2; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); padding: 14px; }
@@ -46,7 +54,7 @@
 input[type='range'] { width: 100%; accent-color: var(--paper); margin-top: 14px; }
 .timeline-labels { display: flex; justify-content: space-between; gap: 10px; color: var(--quiet); font-size: 0.74rem; }
 .event-rail { display: flex; gap: 7px; overflow-x: auto; padding-top: 12px; scrollbar-color: #4a4640 transparent; }
-.event-rail button { min-width: 160px; border: 1px solid var(--line); color: var(--text); border-radius: 10px; text-align: left; background: var(--surface-soft); padding: 9px; font-size: 0.8rem; }
+.event-rail button { min-width: 160px; border: 1px solid var(--line); color: var(--text); border-radius: 10px; text-align: left; background: rgba(20, 20, 18, 0.52); padding: 9px; font-size: 0.8rem; }
 .details-grid { display: grid; grid-template-columns: 1fr 0.85fr; gap: 10px; margin-top: 10px; }
 .empire-brief, .inspector { border: 1px solid var(--line); border-radius: 14px; background: var(--surface); padding: 18px; min-height: 210px; }
 .inspector svg { color: var(--paper); width: 22px; height: 22px; margin-bottom: 14px; }
@@ -55,7 +63,7 @@ input[type='range'] { width: 100%; accent-color: var(--paper); margin-top: 14px;
 .source-list { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 16px; }
 .source-list span { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); color: var(--muted); border-radius: 999px; padding: 6px 8px; font-size: 0.76rem; }
 .event-facts { display: grid; gap: 8px; margin: 16px 0 0; }
-.event-facts div { border: 1px solid var(--line); border-radius: 10px; padding: 9px 10px; background: var(--surface-soft); }
+.event-facts div { border: 1px solid var(--line); border-radius: 10px; padding: 9px 10px; background: rgba(20, 20, 18, 0.52); }
 .event-facts dt { color: var(--subtle); text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.62rem; font-weight: 800; margin-bottom: 4px; }
 .event-facts dd { margin: 0; color: var(--text); line-height: 1.45; font-size: 0.84rem; }
 .app-shell, .map-workspace, .globe-panel, .globe-stage, .timeline-shell, .details-grid, .left-rail, .empire-tabs { min-width: 0; max-width: 100%; }
@@ -79,3 +87,11 @@ input[type='range'] { width: 100%; accent-color: var(--paper); margin-top: 14px;
   .empire-tabs button { min-width: 136px; }
   .event-rail button { min-width: 132px; }
 }
+.top-controls button { border: 1px solid var(--line); border-radius: 999px; padding: 6px 10px; background: var(--surface-soft); color: var(--text); font-size: 0.8rem; }
+.top-controls button:disabled { color: var(--quiet); cursor: not-allowed; opacity: 0.55; }
+.source-list a { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); color: var(--muted); border-radius: 999px; padding: 6px 8px; font-size: 0.76rem; text-decoration: none; }
+.source-list a:hover, .source-list a:focus-visible { color: var(--text-strong); border-color: var(--paper); outline: none; }
+.source-card { margin-top: 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-soft); padding: 11px 12px; }
+.source-card a { color: var(--text-strong); font-weight: 700; text-decoration: none; }
+.source-card a:hover, .source-card a:focus-visible { text-decoration: underline; }
+.source-card p:last-child { margin-bottom: 0; }

@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { BookOpen, Crosshair, Search } from 'lucide-react'
 import './App.css'
 import { HistoryGlobe } from './components/HistoryGlobe'
 import { empires } from './data/empires'
+import { getSourceInfo } from './data/sources'
 import type { EmpireSnapshot, HistoricalEvent, KeyLocation } from './types/history'
 
 type InspectorItem =
@@ -31,10 +32,35 @@ function App(): React.JSX.Element {
   const [showLocations, setShowLocations] = useState(true)
   const [inspectorItem, setInspectorItem] = useState<InspectorItem | null>(null)
   const [activeEventId, setActiveEventId] = useState<string | null>(null)
+  const [isPlaying, setIsPlaying] = useState(false)
 
   const snapshot = selectedEmpire.snapshots[Math.min(snapshotIndex, selectedEmpire.snapshots.length - 1)]
   const visibleEvents = selectedEmpire.events.filter((event) => event.year <= snapshot.year)
   const activeEvent = selectedEmpire.events.find((event) => event.id === activeEventId) ?? null
+  const canStepBackward = snapshotIndex > 0
+  const canStepForward = snapshotIndex < selectedEmpire.snapshots.length - 1
+
+  useEffect(() => {
+    if (!isPlaying) return undefined
+    const interval = window.setInterval(() => {
+      setSnapshotIndex((current) => current >= selectedEmpire.snapshots.length - 1 ? 0 : current + 1)
+      setActiveEventId(null)
+      setInspectorItem(null)
+    }, 1700)
+    return () => window.clearInterval(interval)
+  }, [isPlaying, selectedEmpire.snapshots.length])
+
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent): void {
+      const target = event.target as HTMLElement | null
+      if (target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA' || target?.isContentEditable) return
+      if (event.key === 'ArrowLeft') { event.preventDefault(); stepSnapshot(-1) }
+      if (event.key === 'ArrowRight') { event.preventDefault(); stepSnapshot(1) }
+      if (event.key === ' ') { event.preventDefault(); setIsPlaying((playing) => !playing) }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  })
 
   function selectEmpire(nextEmpireId: string): void {
     setEmpireId(nextEmpireId)
@@ -47,12 +73,21 @@ function App(): React.JSX.Element {
     setSnapshotIndex(nextIndex)
     setActiveEventId(null)
     setInspectorItem(null)
+    setIsPlaying(false)
+  }
+
+  function stepSnapshot(direction: -1 | 1): void {
+    setSnapshotIndex((current) => Math.max(0, Math.min(selectedEmpire.snapshots.length - 1, current + direction)))
+    setActiveEventId(null)
+    setInspectorItem(null)
+    setIsPlaying(false)
   }
 
   function selectEvent(event: HistoricalEvent): void {
     setActiveEventId(event.id)
     setSnapshotIndex(closestSnapshotIndex(selectedEmpire.snapshots, event.year))
     setInspectorItem({ kind: 'event', value: event })
+    setIsPlaying(false)
   }
 
   return (
@@ -61,6 +96,9 @@ function App(): React.JSX.Element {
         <header className="app-bar">
           <a className="brand" href="#explore" aria-label="history-borders home"><span className="brand-mark">hb</span><span>history-borders</span></a>
           <div className="top-controls" aria-label="Map layer toggles">
+            <button type="button" onClick={() => stepSnapshot(-1)} disabled={!canStepBackward}>←</button>
+            <button type="button" onClick={() => setIsPlaying((playing) => !playing)}>{isPlaying ? 'pause' : 'play'}</button>
+            <button type="button" onClick={() => stepSnapshot(1)} disabled={!canStepForward}>→</button>
             <label><input type="checkbox" checked={showEvents} onChange={(event) => setShowEvents(event.target.checked)} /> events</label>
             <label><input type="checkbox" checked={showLocations} onChange={(event) => setShowLocations(event.target.checked)} /> places</label>
           </div>
@@ -102,12 +140,18 @@ function App(): React.JSX.Element {
           <p className="eyebrow">Interpretation</p>
           <h2>{selectedEmpire.headline}</h2>
           <p>{selectedEmpire.caveat}</p>
-          <div className="source-list">{selectedEmpire.sources.map((source) => <span key={source}><BookOpen size={14} /> {source}</span>)}</div>
+          <div className="source-list">{selectedEmpire.sources.map((source) => {
+            const info = getSourceInfo(source)
+            return info ? <a key={source} href={info.url} target="_blank" rel="noreferrer"><BookOpen size={14} /> {info.title}</a> : <span key={source}><BookOpen size={14} /> {source}</span>
+          })}</div>
         </article>
         <aside className="inspector" aria-live="polite">
           <p className="eyebrow">Selected detail</p>
           {inspectorItem ? inspectorItem.kind === 'event' ? (
-            <><Crosshair /><h2>{inspectorItem.value.title}</h2><p className="year">{formatYear(inspectorItem.value.year)} · {inspectorItem.value.type}</p><p>{inspectorItem.value.summary}</p><dl className="event-facts"><div><dt>Map relation</dt><dd>{eventImplication(inspectorItem.value, snapshot)}</dd></div><div><dt>Location</dt><dd>{inspectorItem.value.location.lat.toFixed(2)}, {inspectorItem.value.location.lon.toFixed(2)}</dd></div><div><dt>Current layer</dt><dd>{selectedEmpire.name} · {snapshot.label} · {formatYear(snapshot.year)}</dd></div></dl>{inspectorItem.value.source && <p className="source-note">Source: {inspectorItem.value.source}</p>}</>
+            <><Crosshair /><h2>{inspectorItem.value.title}</h2><p className="year">{formatYear(inspectorItem.value.year)} · {inspectorItem.value.type}</p><p>{inspectorItem.value.summary}</p><dl className="event-facts"><div><dt>Map relation</dt><dd>{eventImplication(inspectorItem.value, snapshot)}</dd></div><div><dt>Location</dt><dd>{inspectorItem.value.location.lat.toFixed(2)}, {inspectorItem.value.location.lon.toFixed(2)}</dd></div><div><dt>Current layer</dt><dd>{selectedEmpire.name} · {snapshot.label} · {formatYear(snapshot.year)}</dd></div></dl>{inspectorItem.value.source && (() => {
+              const info = getSourceInfo(inspectorItem.value.source)
+              return info ? <div className="source-card"><p className="eyebrow">Source</p><a href={info.url} target="_blank" rel="noreferrer">{info.title}</a><p>{info.kind} · {info.note}</p></div> : <p className="source-note">Source: {inspectorItem.value.source}</p>
+            })()}</>
           ) : (
             <><Search /><h2>{inspectorItem.value.name}</h2><p>{inspectorItem.value.note}</p></>
           ) : (
