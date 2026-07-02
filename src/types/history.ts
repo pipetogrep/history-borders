@@ -9,11 +9,13 @@ export interface KeyLocation extends Coordinates {
 }
 
 export interface HistoricalEvent {
+  readonly id: string
   readonly year: number
   readonly title: string
-  readonly type: 'war' | 'expansion' | 'capital' | 'decline'
+  readonly type: 'battle' | 'war' | 'expansion' | 'capital' | 'treaty' | 'decline'
   readonly summary: string
-  readonly location?: Coordinates
+  readonly location: Coordinates
+  readonly source?: string
 }
 
 export interface EmpireSnapshot {
