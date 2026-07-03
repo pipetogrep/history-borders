@@ -14,7 +14,7 @@ const data = await page.evaluate(() => ({
   scrollWidth: document.documentElement.scrollWidth,
   innerWidth: window.innerWidth,
 }));
-if (!data.method?.includes('claim browser') || !data.method.includes('Control overlays')) errors.push('Methodology panel missing expected scrutiny language.');
+if (!data.method?.includes('Sketch map first') || !data.method.includes('Control overlays')) errors.push('Methodology panel missing expected scrutiny language.');
 if (data.scrollWidth > data.innerWidth) errors.push(`Horizontal overflow: ${data.scrollWidth} > ${data.innerWidth}`);
 console.log(JSON.stringify({ data, errors }, null, 2));
 await browser.close();
