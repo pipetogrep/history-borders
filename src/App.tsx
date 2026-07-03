@@ -245,15 +245,15 @@ function App(): React.JSX.Element {
 
         <section className="methodology-panel newspaper-method" aria-labelledby="methodology-title">
           <div>
-            <p className="eyebrow">Methodology</p>
-            <h2 id="methodology-title">Sketch map first. Legal border only when the data says so.</h2>
-            <p>Each filled layer declares what claim it represents, why the timeline changed there, and how approximate the geometry is. Modern conflict layers separate source publication dates from the underlying “as of” control date.</p>
+            <p className="eyebrow">Reading the map</p>
+            <h2 id="methodology-title">Start with the year, then follow what changed.</h2>
+            <p>The filled shape is the selected moment in the story. Timeline ticks explain the pressure around that moment; battle and place markers are evidence points, not claims that an entire frontier moved on that exact day.</p>
           </div>
           <dl>
-            <div><dt>Recognised borders</dt><dd>Shown when a treaty/state-formation claim is the main object, e.g. U.S. 1783 or Ukraine 1991.</dd></div>
-            <div><dt>Control overlays</dt><dd>Used for wars and occupation; these are explicitly not recognition maps.</dd></div>
-            <div><dt>Geometry quality</dt><dd>Still stylised. The next data milestone is replacing hand-drawn extents with source-backed GeoJSON per track.</dd></div>
-            <div><dt>Source freshness</dt><dd>Modern-conflict sources carry publication/access dates; historical references are treated as starting points, not final authority.</dd></div>
+            <div><dt>Filled area</dt><dd>The coloured layer is the best current reading of the selected snapshot: border, control, administration, or influence as labelled above.</dd></div>
+            <div><dt>Timeline ticks</dt><dd>Click a year to move the globe to the nearest mapped snapshot and read why that event matters.</dd></div>
+            <div><dt>Pins and battles</dt><dd>Markers locate important places and clashes. They explain the map; they do not replace the map.</dd></div>
+            <div><dt>Sources</dt><dd>Source rows name the reference used for this track. Modern conflict entries show date context where available.</dd></div>
           </dl>
         </section>
       </section>
