@@ -26,6 +26,23 @@ function eventImplication(event: HistoricalEvent, currentSnapshot: EmpireSnapsho
   return 'Context marker for the selected map snapshot: ' + currentSnapshot.label + '.'
 }
 
+function eventNonClaim(event: HistoricalEvent, currentSnapshot: EmpireSnapshot): string {
+  if (event.type === 'battle') return 'This marker does not mean the whole coloured area changed hands on the battle date; it locates a pressure point in the wider territorial story.'
+  if (event.type === 'war') return 'This marker does not mean the whole coloured area changed hands in that year; it locates a pressure point in the wider territorial story.'
+  if (event.type === 'capital') return 'This marker locates a political centre; it is not itself a border line or a measurement of controlled territory.'
+  if (event.type === 'treaty') return currentSnapshot.layer === 'recognised'
+    ? 'This is a recognised/legal marker, but the simplified fill still suppresses local exceptions and internal boundaries.'
+    : 'This treaty marker is context for the selected layer; it should not be read as recognition of every shaded control area.'
+  return 'The shaded area is a simplified snapshot. Use the date, layer label and source row together before treating it as a territorial claim.'
+}
+
+function evidenceWeight(snapshot: EmpireSnapshot): string {
+  const quality = snapshot.sourceQuality ? snapshot.sourceQuality.replace('-', ' ') : 'source-backed'
+  const confidence = snapshot.confidence ? `${snapshot.confidence} confidence` : 'confidence not stated'
+  const uncertainty = snapshot.uncertainty ? `${snapshot.uncertainty} geometry uncertainty` : 'geometry uncertainty not stated'
+  return `${quality} · ${confidence} · ${uncertainty}`
+}
+
 function sourceDateLine(sourceKey: string | undefined): string | null {
   if (!sourceKey) return null
   const info = getSourceInfo(sourceKey)
@@ -230,7 +247,7 @@ function App(): React.JSX.Element {
           <aside className="inspector side-story" aria-live="polite">
             <p className="eyebrow">Selected detail</p>
             {inspectorItem ? inspectorItem.kind === 'event' ? (
-              <><Crosshair /><h2>{inspectorItem.value.title}</h2><p className="year">{formatYear(inspectorItem.value.year)} · {inspectorItem.value.type}</p><p>{inspectorItem.value.summary}</p>{eventSnapshotOffset && <p className="temporal-note">Nearest map snapshot: {formatYear(snapshot.year)}. The event marker is evidence/context; the filled layer is not a claim that the whole region changed in {formatYear(inspectorItem.value.year)}.</p>}<dl className="event-facts"><div><dt>Map relation</dt><dd>{eventImplication(inspectorItem.value, snapshot)}</dd></div><div><dt>Snapshot claim</dt><dd>{snapshot.claim ?? snapshot.note}</dd></div><div><dt>Layer type</dt><dd>{layerLabel(snapshot.layer)}</dd></div><div><dt>Location</dt><dd>{inspectorItem.value.location.lat.toFixed(2)}, {inspectorItem.value.location.lon.toFixed(2)}</dd></div><div><dt>Current layer</dt><dd>{selectedEmpire.name} · {snapshot.label} · {formatYear(snapshot.year)}{snapshot.confidence ? ` · ${snapshot.confidence} confidence` : ''}</dd></div></dl>{inspectorItem.value.source && (() => {
+              <><Crosshair /><h2>{inspectorItem.value.title}</h2><p className="year">{formatYear(inspectorItem.value.year)} · {inspectorItem.value.type}</p><p>{inspectorItem.value.summary}</p>{eventSnapshotOffset && <p className="temporal-note">Nearest map snapshot: {formatYear(snapshot.year)}. The event marker is evidence/context; the filled layer is not a claim that the whole region changed in {formatYear(inspectorItem.value.year)}.</p>}<dl className="event-facts"><div className="evidence-note"><dt>Evidence note</dt><dd>{eventImplication(inspectorItem.value, snapshot)} {eventNonClaim(inspectorItem.value, snapshot)}</dd></div><div><dt>What changed</dt><dd>{snapshot.change ?? snapshot.note}</dd></div><div><dt>Snapshot claim</dt><dd>{snapshot.claim ?? snapshot.note}</dd></div><div><dt>Evidence weight</dt><dd>{evidenceWeight(snapshot)}</dd></div><div><dt>Layer type</dt><dd>{layerLabel(snapshot.layer)}</dd></div><div><dt>Location</dt><dd>{inspectorItem.value.location.lat.toFixed(2)}, {inspectorItem.value.location.lon.toFixed(2)}</dd></div><div><dt>Current layer</dt><dd>{selectedEmpire.name} · {snapshot.label} · {formatYear(snapshot.year)}{snapshot.asOf ? ` · data as of ${snapshot.asOf}` : ''}</dd></div></dl>{inspectorItem.value.source && (() => {
                 const info = getSourceInfo(inspectorItem.value.source)
                 const dateLine = sourceDateLine(inspectorItem.value.source)
                 return info ? <div className="source-card"><p className="eyebrow">Source</p><a href={info.url} target="_blank" rel="noreferrer">{info.title}</a><p>{info.kind} · {info.note}{dateLine ? ` · ${dateLine}` : ''}</p></div> : <p className="source-note">Source: {inspectorItem.value.source}</p>
