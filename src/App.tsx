@@ -289,7 +289,7 @@ function App(): React.JSX.Element {
             })}
           </div>
           <input type="range" min="0" max={Math.max(0, chronologyBeats.length - 1)} step="1" value={activeBeatIndex} onChange={(event) => selectBeat(Number(event.target.value))} aria-label="Scrub through every map snapshot and historical event" />
-          <div className="timeline-labels">{chronologyBeats.map((item) => <span key={item.id} className={item.kind}>{formatYear(item.year)}</span>)}</div>
+          <div className="timeline-labels">{selectedEmpire.snapshots.map((item) => <span key={item.year}>{formatYear(item.year)}</span>)}</div>
           <div className="transition-strip" aria-label="Map transition context">
             <button type="button" onClick={() => stepMapSnapshot(-1)} disabled={!previousSnapshot}>
               <span>Before</span>
