@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { BookOpen, Crosshair, Search } from 'lucide-react'
 import './App.css'
 import './Chronology.css'
+import './Editorial.css'
 import { HistoryGlobe } from './components/HistoryGlobe'
 import { empires } from './data/empires'
 import { getSourceInfo } from './data/sources'
@@ -209,44 +210,52 @@ function App(): React.JSX.Element {
         </section>
       </section>
 
-      <section className="details-grid">
-        <article className="empire-brief">
-          <p className="eyebrow">Interpretation</p>
-          <h2>{selectedEmpire.headline}</h2>
-          <p>{selectedEmpire.caveat}</p>
-          <div className="source-list">{selectedEmpire.sources.map((source) => {
-            const info = getSourceInfo(source)
-            return info ? <a key={source} href={info.url} target="_blank" rel="noreferrer"><BookOpen size={14} /> {info.title}</a> : <span key={source}><BookOpen size={14} /> {source}</span>
-          })}</div>
-        </article>
-        <aside className="inspector" aria-live="polite">
-          <p className="eyebrow">Selected detail</p>
-          {inspectorItem ? inspectorItem.kind === 'event' ? (
-            <><Crosshair /><h2>{inspectorItem.value.title}</h2><p className="year">{formatYear(inspectorItem.value.year)} · {inspectorItem.value.type}</p><p>{inspectorItem.value.summary}</p>{eventSnapshotOffset && <p className="temporal-note">Nearest map snapshot: {formatYear(snapshot.year)}. The event marker is evidence/context; the filled layer is not a claim that the whole region changed in {formatYear(inspectorItem.value.year)}.</p>}<dl className="event-facts"><div><dt>Map relation</dt><dd>{eventImplication(inspectorItem.value, snapshot)}</dd></div><div><dt>Snapshot claim</dt><dd>{snapshot.claim ?? snapshot.note}</dd></div><div><dt>Layer type</dt><dd>{layerLabel(snapshot.layer)}</dd></div><div><dt>Location</dt><dd>{inspectorItem.value.location.lat.toFixed(2)}, {inspectorItem.value.location.lon.toFixed(2)}</dd></div><div><dt>Current layer</dt><dd>{selectedEmpire.name} · {snapshot.label} · {formatYear(snapshot.year)}{snapshot.confidence ? ` · ${snapshot.confidence} confidence` : ''}</dd></div></dl>{inspectorItem.value.source && (() => {
-              const info = getSourceInfo(inspectorItem.value.source)
-              const dateLine = sourceDateLine(inspectorItem.value.source)
-              return info ? <div className="source-card"><p className="eyebrow">Source</p><a href={info.url} target="_blank" rel="noreferrer">{info.title}</a><p>{info.kind} · {info.note}{dateLine ? ` · ${dateLine}` : ''}</p></div> : <p className="source-note">Source: {inspectorItem.value.source}</p>
-            })()}</>
-          ) : (
-            <><Search /><h2>{inspectorItem.value.name}</h2><p>{inspectorItem.value.note}</p></>
-          ) : (
-            <><Search /><h2>No selection</h2><p>Click a timeline event, battle marker, or place marker to inspect the historical claim behind the map.</p></>
-          )}
-        </aside>
-      </section>
+      <section className="editorial-page" aria-label="Editorial explainer">
+        <header className="newspaper-masthead">
+          <p className="eyebrow">The border record</p>
+          <h2>{selectedEmpire.name}</h2>
+          <p>{selectedEmpire.period} · {snapshot.label} · {formatYear(snapshot.year)}</p>
+        </header>
 
-      <section className="methodology-panel" aria-labelledby="methodology-title">
-        <div>
-          <p className="eyebrow">Methodology</p>
-          <h2 id="methodology-title">Sketch map first. Legal border only when the data says so.</h2>
-          <p>Each filled layer declares what claim it represents, why the timeline changed there, and how approximate the geometry is. Modern conflict layers separate source publication dates from the underlying “as of” control date.</p>
-        </div>
-        <dl>
-          <div><dt>Recognised borders</dt><dd>Shown when a treaty/state-formation claim is the main object, e.g. U.S. 1783 or Ukraine 1991.</dd></div>
-          <div><dt>Control overlays</dt><dd>Used for wars and occupation; these are explicitly not recognition maps.</dd></div>
-          <div><dt>Geometry quality</dt><dd>Still stylised. The next data milestone is replacing hand-drawn extents with source-backed GeoJSON per track.</dd></div>
-          <div><dt>Source freshness</dt><dd>Modern-conflict sources carry publication/access dates; historical references are treated as starting points, not final authority.</dd></div>
-        </dl>
+        <section className="details-grid newspaper-columns">
+          <article className="empire-brief lead-story">
+            <p className="eyebrow">Interpretation</p>
+            <h2>{selectedEmpire.headline}</h2>
+            <p className="standfirst">{selectedEmpire.caveat}</p>
+            <div className="source-list" aria-label="Principal sources">{selectedEmpire.sources.map((source) => {
+              const info = getSourceInfo(source)
+              return info ? <a key={source} href={info.url} target="_blank" rel="noreferrer"><BookOpen size={14} /> {info.title}</a> : <span key={source}><BookOpen size={14} /> {source}</span>
+            })}</div>
+          </article>
+          <aside className="inspector side-story" aria-live="polite">
+            <p className="eyebrow">Selected detail</p>
+            {inspectorItem ? inspectorItem.kind === 'event' ? (
+              <><Crosshair /><h2>{inspectorItem.value.title}</h2><p className="year">{formatYear(inspectorItem.value.year)} · {inspectorItem.value.type}</p><p>{inspectorItem.value.summary}</p>{eventSnapshotOffset && <p className="temporal-note">Nearest map snapshot: {formatYear(snapshot.year)}. The event marker is evidence/context; the filled layer is not a claim that the whole region changed in {formatYear(inspectorItem.value.year)}.</p>}<dl className="event-facts"><div><dt>Map relation</dt><dd>{eventImplication(inspectorItem.value, snapshot)}</dd></div><div><dt>Snapshot claim</dt><dd>{snapshot.claim ?? snapshot.note}</dd></div><div><dt>Layer type</dt><dd>{layerLabel(snapshot.layer)}</dd></div><div><dt>Location</dt><dd>{inspectorItem.value.location.lat.toFixed(2)}, {inspectorItem.value.location.lon.toFixed(2)}</dd></div><div><dt>Current layer</dt><dd>{selectedEmpire.name} · {snapshot.label} · {formatYear(snapshot.year)}{snapshot.confidence ? ` · ${snapshot.confidence} confidence` : ''}</dd></div></dl>{inspectorItem.value.source && (() => {
+                const info = getSourceInfo(inspectorItem.value.source)
+                const dateLine = sourceDateLine(inspectorItem.value.source)
+                return info ? <div className="source-card"><p className="eyebrow">Source</p><a href={info.url} target="_blank" rel="noreferrer">{info.title}</a><p>{info.kind} · {info.note}{dateLine ? ` · ${dateLine}` : ''}</p></div> : <p className="source-note">Source: {inspectorItem.value.source}</p>
+              })()}</>
+            ) : (
+              <><Search /><h2>{inspectorItem.value.name}</h2><p>{inspectorItem.value.note}</p></>
+            ) : (
+              <><Search /><h2>No selection</h2><p>Click a timeline event, battle marker, or place marker to inspect the historical claim behind the map.</p></>
+            )}
+          </aside>
+        </section>
+
+        <section className="methodology-panel newspaper-method" aria-labelledby="methodology-title">
+          <div>
+            <p className="eyebrow">Methodology</p>
+            <h2 id="methodology-title">Sketch map first. Legal border only when the data says so.</h2>
+            <p>Each filled layer declares what claim it represents, why the timeline changed there, and how approximate the geometry is. Modern conflict layers separate source publication dates from the underlying “as of” control date.</p>
+          </div>
+          <dl>
+            <div><dt>Recognised borders</dt><dd>Shown when a treaty/state-formation claim is the main object, e.g. U.S. 1783 or Ukraine 1991.</dd></div>
+            <div><dt>Control overlays</dt><dd>Used for wars and occupation; these are explicitly not recognition maps.</dd></div>
+            <div><dt>Geometry quality</dt><dd>Still stylised. The next data milestone is replacing hand-drawn extents with source-backed GeoJSON per track.</dd></div>
+            <div><dt>Source freshness</dt><dd>Modern-conflict sources carry publication/access dates; historical references are treated as starting points, not final authority.</dd></div>
+          </dl>
+        </section>
       </section>
     </main>
   )
