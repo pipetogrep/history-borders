@@ -262,6 +262,7 @@ function App(): React.JSX.Element {
           empire={selectedEmpire}
           snapshot={snapshot}
           activeEvent={activeEvent}
+          previousSnapshot={previousSnapshot}
           frameKicker={`${activeBeatIndex + 1}/${chronologyBeats.length} · ${currentBeat?.kind === 'event' ? currentBeat.event.type : snapshot.layer}`}
           frameTitle={currentBeat ? currentBeat.title : snapshot.label}
           frameSummary={currentBeat?.kind === 'event' ? currentBeat.event.summary : (snapshot.change ?? snapshot.note)}
