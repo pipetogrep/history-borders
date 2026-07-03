@@ -11,7 +11,8 @@ await new Promise(resolve => setTimeout(resolve, 350));
 const data = await page.evaluate(() => ({
   legend: document.querySelector('.map-legend')?.textContent ?? '',
   markerLabels: Array.from(document.querySelectorAll('.map-marker[data-label]')).slice(0, 8).map((node) => node.getAttribute('data-label')),
-  geometrySource: document.querySelector('.snapshot-evidence')?.textContent ?? '',
+  metadataText: document.querySelector('.snapshot-card')?.textContent ?? '',
+  evidenceRows: document.querySelectorAll('.snapshot-evidence').length,
   scrollWidth: document.documentElement.scrollWidth,
   innerWidth: window.innerWidth,
 }));
@@ -19,7 +20,7 @@ await page.screenshot({ path: '/workspace/agent/history-borders-legend.png', ful
 console.log(JSON.stringify({ data, errors }, null, 2));
 await browser.close();
 if (errors.length) throw new Error(`Browser errors: ${errors.join('; ')}`);
-if (!data.legend.includes('control estimate') || !data.legend.includes('battle / war') || !data.legend.includes('place')) throw new Error('Legend does not expose layer and marker semantics.');
+if (!data.legend.includes('recognised border baseline') || !data.legend.includes('control estimate') || !data.legend.includes('battle / war') || !data.legend.includes('place')) throw new Error('Legend does not expose baseline/layer/marker semantics.');
 if (data.markerLabels.length < 3 || data.markerLabels.some((label) => !label)) throw new Error('Markers are missing data-label affordances.');
-if (!data.geometrySource.includes('Geometry method') || !data.geometrySource.includes('Geometry source')) throw new Error('Snapshot evidence is missing geometry provenance.');
+if (data.evidenceRows !== 0 || data.metadataText.includes('Geometry method') || data.metadataText.includes('Source quality')) throw new Error('Technical metadata leaked into the main viewing card.');
 if (data.scrollWidth > data.innerWidth) throw new Error('Horizontal overflow detected.');
