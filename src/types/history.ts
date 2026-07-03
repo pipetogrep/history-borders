@@ -18,6 +18,9 @@ export interface HistoricalEvent {
   readonly source?: string
 }
 
+export type SourceQuality = 'atlas-derived' | 'reference-backed' | 'modern-assessment' | 'schematic'
+export type GeometryUncertainty = 'low' | 'medium' | 'high'
+
 export interface EmpireSnapshot {
   readonly year: number
   readonly label: string
@@ -29,7 +32,10 @@ export interface EmpireSnapshot {
   readonly geometry?: string
   readonly geometryMethod?: string
   readonly geometrySource?: string
-  readonly uncertainty?: 'low' | 'medium' | 'high'
+  readonly provenanceLabel?: string
+  readonly sourceQuality?: SourceQuality
+  readonly asOf?: string
+  readonly uncertainty?: GeometryUncertainty
   readonly confidence?: 'high' | 'medium' | 'low'
   readonly source?: string
   readonly scale?: number
