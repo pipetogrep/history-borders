@@ -13,3 +13,15 @@
 .transition-strip article{background:rgba(255,255,255,0.34);}
 @media (max-width:1120px){.timeline-shell{width:calc(100% - 48px);}.event-rail button{min-width:136px;}}
 @media (max-width:720px){.timeline-shell{width:calc(100% - 20px);}.chronology-band{min-height:76px;}.event-rail button{min-width:128px;}}
+
+/* reduce card-like event furniture; keep the chronology as labelled ticks */
+.event-rail{gap:0;padding-top:8px;}
+.event-rail button{min-width:118px;border-color:transparent;border-left:1px solid rgba(54,63,55,0.14);border-radius:0;background:transparent;padding:7px 10px 7px 11px;box-shadow:none;}
+.event-rail button:first-child{border-left-color:transparent;}
+.event-rail button.active{border-color:transparent;border-left-color:rgba(140,106,53,0.38);background:linear-gradient(90deg,rgba(140,106,53,0.08),transparent);}
+.event-rail button:hover,.event-rail button:focus-visible{background:rgba(255,253,247,0.42);outline:none;}
+.event-rail span{margin-bottom:3px;}
+.event-rail strong{display:block;line-height:1.18;font-weight:680;}
+.transition-strip article{border-radius:12px;}
+@media (max-width:1120px){.event-rail button{min-width:116px;}}
+@media (max-width:720px){.event-rail button{min-width:112px;}}
