@@ -24,6 +24,22 @@ function eventImplication(event: HistoricalEvent, currentSnapshot: EmpireSnapsho
   return 'Context marker for the selected map snapshot: ' + currentSnapshot.label + '.'
 }
 
+function sourceDateLine(sourceKey: string | undefined): string | null {
+  if (!sourceKey) return null
+  const info = getSourceInfo(sourceKey)
+  if (!info) return null
+  const dates = [info.publishedAt ? `published ${info.publishedAt}` : null, info.accessedAt ? `accessed ${info.accessedAt}` : null].filter(Boolean)
+  return dates.length > 0 ? dates.join(' · ') : null
+}
+
+function layerLabel(layer: EmpireSnapshot['layer']): string {
+  if (layer === 'recognised') return 'recognised border claim'
+  if (layer === 'control') return 'occupation/control overlay'
+  if (layer === 'administrative') return 'administrative frame'
+  if (layer === 'influence') return 'influence zone'
+  return 'imperial extent'
+}
+
 function App(): React.JSX.Element {
   const [empireId, setEmpireId] = useState(empires[0].id)
   const selectedEmpire = useMemo(() => empires.find((empire) => empire.id === empireId) ?? empires[0], [empireId])
@@ -35,10 +51,14 @@ function App(): React.JSX.Element {
   const [isPlaying, setIsPlaying] = useState(false)
 
   const snapshot = selectedEmpire.snapshots[Math.min(snapshotIndex, selectedEmpire.snapshots.length - 1)]
-  const visibleEvents = selectedEmpire.events.filter((event) => event.year <= snapshot.year)
   const activeEvent = selectedEmpire.events.find((event) => event.id === activeEventId) ?? null
+  const visibleEvents = selectedEmpire.events.filter((event) => event.year <= snapshot.year || event.id === activeEventId)
   const canStepBackward = snapshotIndex > 0
   const canStepForward = snapshotIndex < selectedEmpire.snapshots.length - 1
+  const previousSnapshot = canStepBackward ? selectedEmpire.snapshots[snapshotIndex - 1] : null
+  const nextSnapshot = canStepForward ? selectedEmpire.snapshots[snapshotIndex + 1] : null
+  const inspectedEvent = inspectorItem?.kind === 'event' ? inspectorItem.value : null
+  const eventSnapshotOffset = inspectedEvent && inspectedEvent.year !== snapshot.year
 
   useEffect(() => {
     if (!isPlaying) return undefined
@@ -125,6 +145,23 @@ function App(): React.JSX.Element {
           </div>
           <input type="range" min="0" max={selectedEmpire.snapshots.length - 1} step="1" value={snapshotIndex} onChange={(event) => selectSnapshot(Number(event.target.value))} aria-label="Choose historical snapshot" />
           <div className="timeline-labels">{selectedEmpire.snapshots.map((item) => <span key={item.year}>{formatYear(item.year)}</span>)}</div>
+          <div className="transition-strip" aria-label="Map transition context">
+            <button type="button" onClick={() => stepSnapshot(-1)} disabled={!previousSnapshot}>
+              <span>Previous layer</span>
+              <strong>{previousSnapshot ? `${formatYear(previousSnapshot.year)} · ${previousSnapshot.label}` : 'Start of track'}</strong>
+              <small>{previousSnapshot?.claim ?? 'No earlier snapshot for this track.'}</small>
+            </button>
+            <article>
+              <span>Map change now</span>
+              <strong>{layerLabel(snapshot.layer)}</strong>
+              <p>{snapshot.change}</p>
+            </article>
+            <button type="button" onClick={() => stepSnapshot(1)} disabled={!nextSnapshot}>
+              <span>Next layer</span>
+              <strong>{nextSnapshot ? `${formatYear(nextSnapshot.year)} · ${nextSnapshot.label}` : 'End of track'}</strong>
+              <small>{nextSnapshot?.change ?? 'No later snapshot for this track.'}</small>
+            </button>
+          </div>
           <div className="event-rail" aria-label="Jump to event">
             {selectedEmpire.events.map((event) => (
               <button key={event.id} type="button" className={activeEventId === event.id ? 'active' : ''} onClick={() => selectEvent(event)}>
@@ -148,9 +185,10 @@ function App(): React.JSX.Element {
         <aside className="inspector" aria-live="polite">
           <p className="eyebrow">Selected detail</p>
           {inspectorItem ? inspectorItem.kind === 'event' ? (
-            <><Crosshair /><h2>{inspectorItem.value.title}</h2><p className="year">{formatYear(inspectorItem.value.year)} · {inspectorItem.value.type}</p><p>{inspectorItem.value.summary}</p><dl className="event-facts"><div><dt>Map relation</dt><dd>{eventImplication(inspectorItem.value, snapshot)}</dd></div><div><dt>Location</dt><dd>{inspectorItem.value.location.lat.toFixed(2)}, {inspectorItem.value.location.lon.toFixed(2)}</dd></div><div><dt>Current layer</dt><dd>{selectedEmpire.name} · {snapshot.label} · {formatYear(snapshot.year)}</dd></div></dl>{inspectorItem.value.source && (() => {
+            <><Crosshair /><h2>{inspectorItem.value.title}</h2><p className="year">{formatYear(inspectorItem.value.year)} · {inspectorItem.value.type}</p><p>{inspectorItem.value.summary}</p>{eventSnapshotOffset && <p className="temporal-note">Nearest map snapshot: {formatYear(snapshot.year)}. The event marker is evidence/context; the filled layer is not a claim that the whole region changed in {formatYear(inspectorItem.value.year)}.</p>}<dl className="event-facts"><div><dt>Map relation</dt><dd>{eventImplication(inspectorItem.value, snapshot)}</dd></div><div><dt>Snapshot claim</dt><dd>{snapshot.claim ?? snapshot.note}</dd></div><div><dt>Layer type</dt><dd>{layerLabel(snapshot.layer)}</dd></div><div><dt>Location</dt><dd>{inspectorItem.value.location.lat.toFixed(2)}, {inspectorItem.value.location.lon.toFixed(2)}</dd></div><div><dt>Current layer</dt><dd>{selectedEmpire.name} · {snapshot.label} · {formatYear(snapshot.year)}{snapshot.confidence ? ` · ${snapshot.confidence} confidence` : ''}</dd></div></dl>{inspectorItem.value.source && (() => {
               const info = getSourceInfo(inspectorItem.value.source)
-              return info ? <div className="source-card"><p className="eyebrow">Source</p><a href={info.url} target="_blank" rel="noreferrer">{info.title}</a><p>{info.kind} · {info.note}</p></div> : <p className="source-note">Source: {inspectorItem.value.source}</p>
+              const dateLine = sourceDateLine(inspectorItem.value.source)
+              return info ? <div className="source-card"><p className="eyebrow">Source</p><a href={info.url} target="_blank" rel="noreferrer">{info.title}</a><p>{info.kind} · {info.note}{dateLine ? ` · ${dateLine}` : ''}</p></div> : <p className="source-note">Source: {inspectorItem.value.source}</p>
             })()}</>
           ) : (
             <><Search /><h2>{inspectorItem.value.name}</h2><p>{inspectorItem.value.note}</p></>
@@ -158,6 +196,20 @@ function App(): React.JSX.Element {
             <><Search /><h2>No selection</h2><p>Click a timeline event, battle marker, or place marker to inspect the historical claim behind the map.</p></>
           )}
         </aside>
+      </section>
+
+      <section className="methodology-panel" aria-labelledby="methodology-title">
+        <div>
+          <p className="eyebrow">Methodology</p>
+          <h2 id="methodology-title">Treat the globe as a claim browser, not a cadastral atlas.</h2>
+          <p>Each filled layer needs three things to survive scrutiny: what claim it represents, why the timeline changed there, and how approximate the geometry is. The current dataset now exposes those fields for the strongest tracks, with modern conflict layers dated separately from historical event summaries.</p>
+        </div>
+        <dl>
+          <div><dt>Recognised borders</dt><dd>Shown when a treaty/state-formation claim is the main object, e.g. U.S. 1783 or Ukraine 1991.</dd></div>
+          <div><dt>Control overlays</dt><dd>Used for wars and occupation; these are explicitly not recognition maps.</dd></div>
+          <div><dt>Geometry quality</dt><dd>Still stylised. The next data milestone is replacing hand-drawn extents with source-backed GeoJSON per track.</dd></div>
+          <div><dt>Source freshness</dt><dd>Modern-conflict sources carry publication/access dates; historical references are treated as starting points, not final authority.</dd></div>
+        </dl>
       </section>
     </main>
   )
