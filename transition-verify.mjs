@@ -27,7 +27,7 @@ const after = await page.evaluate(() => ({
 }));
 await page.screenshot({ path: '/workspace/agent/history-borders-transition.png', fullPage: true });
 console.log(JSON.stringify({ before, after, errors }, null, 2));
-if (!before.transition?.includes('Map change now') || !before.transition?.includes('control estimate')) throw new Error('Transition strip missing current layer semantics.');
+if (!before.transition?.includes('Now on the map') || !before.transition?.includes('Crimea and Donbas occupation')) throw new Error('Transition strip missing current map-change context.');
 if (after.h1 === before.h1) throw new Error('Next transition button did not advance the active snapshot.');
 if (!after.cue?.includes('→') || after.ghostCount < 1 || after.currentCount < 1) throw new Error('Animated transition cue/previous layer ghost did not render.');
 if (before.scrollWidth > before.innerWidth || after.scrollWidth > after.innerWidth) throw new Error('Horizontal overflow detected in transition strip.');
