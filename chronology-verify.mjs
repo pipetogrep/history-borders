@@ -23,6 +23,8 @@ const after = await page.evaluate(() => ({
   h1: document.querySelector('.timeline-head h1')?.textContent,
   activeText: document.querySelector('.chronology-event.active')?.textContent,
   currentCount: document.querySelectorAll('.empire-current').length,
+  activeStem: getComputedStyle(document.querySelector('.chronology-event.active'), '::after').content !== 'none',
+  activeYearOpacity: getComputedStyle(document.querySelector('.chronology-event.active span')).opacity,
   scrollWidth: document.documentElement.scrollWidth,
   innerWidth: window.innerWidth,
 }));
@@ -32,6 +34,7 @@ if (before.events < 6 || before.ticks < 4) throw new Error('Chronology band did 
 if (before.future < 1) throw new Error('Chronology band is not distinguishing future events from current map context.');
 if (!after.inspector?.includes('Louisiana Purchase') || !after.activeText?.includes('Louisiana Purchase')) throw new Error('Chronology event click did not drive selected event detail.');
 if (!after.h1?.includes('Louisiana Purchase')) throw new Error('Chronology event click did not move map to nearest snapshot.');
+if (!after.activeStem || after.activeYearOpacity !== '0') throw new Error('Active chronology playhead stem did not render cleanly.');
 if (after.currentCount < 1) throw new Error('Current map layer missing after chronology selection.');
 if (before.scrollWidth > before.innerWidth || after.scrollWidth > after.innerWidth) throw new Error('Horizontal overflow detected in chronology band.');
 if (errors.length) throw new Error(`Browser errors: ${errors.join('; ')}`);
