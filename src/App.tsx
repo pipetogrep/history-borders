@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { BookOpen, Crosshair, Search } from 'lucide-react'
 import './App.css'
+import './Chronology.css'
 import { HistoryGlobe } from './components/HistoryGlobe'
 import { empires } from './data/empires'
 import { getSourceInfo } from './data/sources'
@@ -40,6 +41,16 @@ function layerLabel(layer: EmpireSnapshot['layer']): string {
   return 'schematic extent'
 }
 
+function eventState(event: HistoricalEvent, snapshot: EmpireSnapshot, activeEventId: string | null): 'active' | 'past' | 'future' {
+  if (event.id === activeEventId) return 'active'
+  return event.year <= snapshot.year ? 'past' : 'future'
+}
+
+function timelinePercent(year: number, start: number, end: number): number {
+  if (start === end) return 50
+  return Math.max(0, Math.min(100, ((year - start) / (end - start)) * 100))
+}
+
 function App(): React.JSX.Element {
   const [empireId, setEmpireId] = useState(empires[0].id)
   const selectedEmpire = useMemo(() => empires.find((empire) => empire.id === empireId) ?? empires[0], [empireId])
@@ -59,6 +70,9 @@ function App(): React.JSX.Element {
   const nextSnapshot = canStepForward ? selectedEmpire.snapshots[snapshotIndex + 1] : null
   const inspectedEvent = inspectorItem?.kind === 'event' ? inspectorItem.value : null
   const eventSnapshotOffset = inspectedEvent && inspectedEvent.year !== snapshot.year
+  const chronologyYears = [...selectedEmpire.snapshots.map((item) => item.year), ...selectedEmpire.events.map((event) => event.year)]
+  const timelineStart = Math.min(...chronologyYears)
+  const timelineEnd = Math.max(...chronologyYears)
 
   useEffect(() => {
     if (!isPlaying) return undefined
@@ -143,6 +157,29 @@ function App(): React.JSX.Element {
             <div><p className="eyebrow">{formatYear(snapshot.year)}</p><h1>{selectedEmpire.name}: {snapshot.label}</h1></div>
             <p>{snapshot.note}</p>
           </div>
+          <div className="chronology-band" aria-label="Chronology of map snapshots and historical events">
+            <div className="snapshot-ticks" aria-hidden="true">
+              {selectedEmpire.snapshots.map((item) => (
+                <span key={`${item.year}-${item.label}`} style={{ left: `${timelinePercent(item.year, timelineStart, timelineEnd)}%` }} />
+              ))}
+            </div>
+            {selectedEmpire.events.map((event) => {
+              const state = eventState(event, snapshot, activeEventId)
+              return (
+                <button
+                  key={event.id}
+                  type="button"
+                  className={`chronology-event ${event.type} ${state}`}
+                  style={{ left: `${timelinePercent(event.year, timelineStart, timelineEnd)}%` }}
+                  onClick={() => selectEvent(event)}
+                  aria-label={`Inspect ${formatYear(event.year)} ${event.title}; ${state === 'future' ? 'after' : 'within or before'} current map snapshot`}
+                >
+                  <span>{formatYear(event.year)}</span>
+                  <strong>{event.title}</strong>
+                </button>
+              )
+            })}
+          </div>
           <input type="range" min="0" max={selectedEmpire.snapshots.length - 1} step="1" value={snapshotIndex} onChange={(event) => selectSnapshot(Number(event.target.value))} aria-label="Choose historical snapshot" />
           <div className="timeline-labels">{selectedEmpire.snapshots.map((item) => <span key={item.year}>{formatYear(item.year)}</span>)}</div>
           <div className="transition-strip" aria-label="Map transition context">
@@ -165,7 +202,7 @@ function App(): React.JSX.Element {
           <div className="event-rail" aria-label="Jump to event">
             {selectedEmpire.events.map((event) => (
               <button key={event.id} type="button" className={activeEventId === event.id ? 'active' : ''} onClick={() => selectEvent(event)}>
-                <span>{formatYear(event.year)}</span>{event.title}
+                <span>{formatYear(event.year)} · {eventState(event, snapshot, activeEventId) === 'future' ? 'ahead of map' : 'in map context'}</span>{event.title}
               </button>
             ))}
           </div>
