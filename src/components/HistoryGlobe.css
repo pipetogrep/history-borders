@@ -21,3 +21,10 @@
 .frame-readout small { display: block; margin-top: 8px; color: var(--quiet); font-size: 0.64rem; letter-spacing: 0.03em; }
 @media (max-width: 720px) { .frame-readout { top: 88px; right: 12px; left: 12px; width: auto; padding: 10px 11px; } .frame-readout p { display: none; } }
 @media (prefers-reduced-motion: reduce) { .frame-meter span { transition: none; } }
+
+.previous-frame-outline { fill: none; stroke: rgba(37,53,47,0.34); stroke-width: 1.15; stroke-dasharray: 2 5; stroke-linejoin: round; stroke-linecap: round; pointer-events: none; filter: drop-shadow(0 1px 0 rgba(255,253,247,0.44)); animation: previousTrace 520ms cubic-bezier(.18,.82,.23,1); }
+.previous-frame-outline.layer-control { stroke: rgba(157,93,80,0.36); }
+.previous-frame-outline.layer-imperial { stroke: rgba(140,106,53,0.38); }
+.legend-line.previous { border-top-style: dotted; border-top-color: rgba(37,53,47,0.42); }
+@keyframes previousTrace { from { opacity: 0; stroke-dashoffset: 10; } to { opacity: 1; stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) { .previous-frame-outline { animation: none; } }
