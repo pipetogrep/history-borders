@@ -19,7 +19,7 @@ await page.screenshot({ path: '/workspace/agent/history-borders-legend.png', ful
 console.log(JSON.stringify({ data, errors }, null, 2));
 await browser.close();
 if (errors.length) throw new Error(`Browser errors: ${errors.join('; ')}`);
-if (!data.legend.includes('occupation/control overlay') || !data.legend.includes('battle / war') || !data.legend.includes('place')) throw new Error('Legend does not expose layer and marker semantics.');
+if (!data.legend.includes('control estimate') || !data.legend.includes('battle / war') || !data.legend.includes('place')) throw new Error('Legend does not expose layer and marker semantics.');
 if (data.markerLabels.length < 3 || data.markerLabels.some((label) => !label)) throw new Error('Markers are missing data-label affordances.');
 if (!data.geometrySource.includes('Geometry method') || !data.geometrySource.includes('Geometry source')) throw new Error('Snapshot evidence is missing geometry provenance.');
 if (data.scrollWidth > data.innerWidth) throw new Error('Horizontal overflow detected.');
