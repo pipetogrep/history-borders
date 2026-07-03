@@ -28,16 +28,16 @@ function sourceDateLine(sourceKey: string | undefined): string | null {
   if (!sourceKey) return null
   const info = getSourceInfo(sourceKey)
   if (!info) return null
-  const dates = [info.publishedAt ? `published ${info.publishedAt}` : null, info.accessedAt ? `accessed ${info.accessedAt}` : null].filter(Boolean)
+  const dates = [info.asOf ? `data as of ${info.asOf}` : null, info.publishedAt ? `published ${info.publishedAt}` : null, info.accessedAt ? `accessed ${info.accessedAt}` : null].filter(Boolean)
   return dates.length > 0 ? dates.join(' · ') : null
 }
 
 function layerLabel(layer: EmpireSnapshot['layer']): string {
-  if (layer === 'recognised') return 'recognised border claim'
-  if (layer === 'control') return 'occupation/control overlay'
-  if (layer === 'administrative') return 'administrative frame'
-  if (layer === 'influence') return 'influence zone'
-  return 'imperial extent'
+  if (layer === 'recognised') return 'legal border'
+  if (layer === 'control') return 'control estimate'
+  if (layer === 'administrative') return 'administrative sketch'
+  if (layer === 'influence') return 'influence sketch'
+  return 'schematic extent'
 }
 
 function App(): React.JSX.Element {
@@ -201,8 +201,8 @@ function App(): React.JSX.Element {
       <section className="methodology-panel" aria-labelledby="methodology-title">
         <div>
           <p className="eyebrow">Methodology</p>
-          <h2 id="methodology-title">Treat the globe as a claim browser, not a cadastral atlas.</h2>
-          <p>Each filled layer needs three things to survive scrutiny: what claim it represents, why the timeline changed there, and how approximate the geometry is. The current dataset now exposes those fields for the strongest tracks, with modern conflict layers dated separately from historical event summaries.</p>
+          <h2 id="methodology-title">Sketch map first. Legal border only when the data says so.</h2>
+          <p>Each filled layer declares what claim it represents, why the timeline changed there, and how approximate the geometry is. Modern conflict layers separate source publication dates from the underlying “as of” control date.</p>
         </div>
         <dl>
           <div><dt>Recognised borders</dt><dd>Shown when a treaty/state-formation claim is the main object, e.g. U.S. 1783 or Ukraine 1991.</dd></div>
