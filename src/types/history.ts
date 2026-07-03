@@ -22,7 +22,18 @@ export interface EmpireSnapshot {
   readonly year: number
   readonly label: string
   readonly extent: GeoJSON.Feature<GeoJSON.MultiPolygon>
+  readonly countryNames?: readonly string[]
   readonly note: string
+  readonly claim?: string
+  readonly change?: string
+  readonly geometry?: string
+  readonly geometryMethod?: string
+  readonly geometrySource?: string
+  readonly uncertainty?: 'low' | 'medium' | 'high'
+  readonly confidence?: 'high' | 'medium' | 'low'
+  readonly source?: string
+  readonly scale?: number
+  readonly layer: 'recognised' | 'control' | 'imperial' | 'administrative' | 'influence'
 }
 
 export interface Empire {
