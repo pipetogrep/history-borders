@@ -75,3 +75,10 @@
 .event-rail span{font-size:0.56rem;letter-spacing:0.08em;}
 .event-rail button.active{box-shadow:inset 0 -2px 0 rgba(140,106,53,0.34);}
 @media (max-width:720px){.event-rail button{min-width:94px;font-size:0.70rem;}}
+
+/* selected event reticle: anchors the timeline's active beat directly to the globe */
+.event-marker.active::before{content:'';position:absolute;inset:-13px;border:1px solid rgba(37,53,47,0.46);border-radius:999px;pointer-events:none;animation:selectedEventReticle 1500ms cubic-bezier(.18,.82,.23,1) infinite;}
+.event-marker.active::after{box-shadow:0 10px 28px rgba(37,53,47,0.14);}
+.event-marker.active{box-shadow:0 0 0 1px rgba(255,253,247,0.82),0 0 0 13px rgba(140,106,53,0.10),0 16px 36px rgba(37,53,47,0.16);}
+@keyframes selectedEventReticle{0%{opacity:.72;transform:scale(.78);}72%,100%{opacity:0;transform:scale(1.28);}}
+@media (prefers-reduced-motion:reduce){.event-marker.active::before{animation:none;opacity:.32;}}
