@@ -1,0 +1,11 @@
+.empire-extent { transform-origin: 50% 50%; }
+.empire-current { animation-name: layerReveal, layerSettle; animation-duration: 760ms, 920ms; animation-timing-function: cubic-bezier(.18,.82,.23,1), cubic-bezier(.18,.82,.23,1); }
+.empire-previous { pointer-events: none; opacity: 0; fill-opacity: 0.08 !important; stroke-opacity: 0.22; stroke-width: 1.8; stroke-dasharray: 2 4; animation: layerGhost 1050ms cubic-bezier(.18,.82,.23,1); }
+.transition-cue { position: absolute; left: 50%; top: 18px; translate: -50% 0; display: inline-flex; align-items: center; gap: 8px; max-width: min(620px, calc(100% - 32px)); border: 1px solid rgba(54, 63, 55, 0.14); border-radius: 999px; background: rgba(255, 253, 247, 0.78); color: var(--muted); backdrop-filter: blur(10px); padding: 7px 11px; font-size: 0.68rem; letter-spacing: 0.02em; box-shadow: 0 10px 28px rgba(54,63,55,0.09); animation: cueFloat 1050ms ease both; z-index: 4; }
+.transition-cue span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.transition-cue strong { color: var(--text-strong); font-family: var(--font-serif); font-size: 0.94rem; font-weight: 520; }
+@keyframes layerSettle { from { transform: scale(0.988); } to { transform: scale(1); } }
+@keyframes layerGhost { 0% { opacity: 0.64; transform: scale(1); } 72% { opacity: 0.26; } 100% { opacity: 0; transform: scale(1.006); } }
+@keyframes cueFloat { 0% { opacity: 0; transform: translateY(-4px); } 16% { opacity: 1; transform: translateY(0); } 82% { opacity: 1; } 100% { opacity: 0; } }
+@media (max-width: 720px) { .transition-cue { left: 12px; right: 12px; top: 96px; translate: none; justify-content: center; font-size: 0.62rem; } }
+@media (prefers-reduced-motion: reduce) { .empire-current, .empire-previous, .transition-cue { animation: none; } .empire-previous, .transition-cue { display: none; } }
