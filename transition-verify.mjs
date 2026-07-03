@@ -24,7 +24,7 @@ const after = await page.evaluate(() => ({
 }));
 await page.screenshot({ path: '/workspace/agent/history-borders-transition.png', fullPage: true });
 console.log(JSON.stringify({ before, after, errors }, null, 2));
-if (!before.transition?.includes('Map change now') || !before.transition?.includes('occupation/control overlay')) throw new Error('Transition strip missing current layer semantics.');
+if (!before.transition?.includes('Map change now') || !before.transition?.includes('control estimate')) throw new Error('Transition strip missing current layer semantics.');
 if (after.h1 === before.h1) throw new Error('Next transition button did not advance the active snapshot.');
 if (before.scrollWidth > before.innerWidth || after.scrollWidth > after.innerWidth) throw new Error('Horizontal overflow detected in transition strip.');
 if (errors.length) throw new Error(`Browser errors: ${errors.join('; ')}`);
