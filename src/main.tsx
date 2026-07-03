@@ -8,6 +8,7 @@ import './data/ottomanAftermath.ts'
 import './data/abbasidFragmentation.ts'
 import './data/britishDecolonisation.ts'
 import './data/romanAftermath.ts'
+import './data/mongolFragmentation.ts'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
