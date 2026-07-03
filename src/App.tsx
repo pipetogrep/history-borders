@@ -87,6 +87,14 @@ function timelinePercent(year: number, start: number, end: number): number {
   return Math.max(0, Math.min(100, ((year - start) / (end - start)) * 100))
 }
 
+function chronologyFocusClass(eventIndex: number, activeEventIndex: number): string {
+  if (activeEventIndex < 0) return 'distant'
+  const distance = Math.abs(eventIndex - activeEventIndex)
+  if (distance === 0) return 'focus'
+  if (distance <= 1) return 'near'
+  return 'distant'
+}
+
 function buildChronologyBeats(snapshots: readonly EmpireSnapshot[], events: readonly HistoricalEvent[]): readonly ChronologyBeat[] {
   return [
     ...snapshots.map((snapshot, index) => ({ kind: 'snapshot' as const, id: `snapshot-${snapshot.year}-${index}`, year: snapshot.year, snapshotIndex: index, title: snapshot.label })),
@@ -128,6 +136,7 @@ function App(): React.JSX.Element {
   const currentBeat = chronologyBeats[activeBeatIndex] ?? chronologyBeats[0]
   const snapshot = selectedEmpire.snapshots[Math.min(snapshotIndex, selectedEmpire.snapshots.length - 1)]
   const activeEvent = selectedEmpire.events.find((event) => event.id === activeEventId) ?? null
+  const activeEventIndex = activeEventId ? selectedEmpire.events.findIndex((event) => event.id === activeEventId) : -1
   const visibleEvents = selectedEmpire.events.filter((event) => event.year <= snapshot.year || event.id === activeEventId)
   const canStepBackward = activeBeatIndex > 0
   const canStepForward = activeBeatIndex < chronologyBeats.length - 1
@@ -286,13 +295,21 @@ function App(): React.JSX.Element {
                 <span key={`${item.year}-${item.label}`} style={{ left: `${timelinePercent(item.year, timelineStart, timelineEnd)}%` }} />
               ))}
             </div>
-            {selectedEmpire.events.map((event) => {
+            <div
+              className="timeline-playhead"
+              style={{ left: `${timelinePercent(currentBeat?.year ?? snapshot.year, timelineStart, timelineEnd)}%` }}
+              aria-hidden="true"
+            >
+              <span>{formatYear(currentBeat?.year ?? snapshot.year)}</span>
+            </div>
+            {selectedEmpire.events.map((event, eventIndex) => {
               const state = eventState(event, snapshot, activeEventId)
+              const focus = chronologyFocusClass(eventIndex, activeEventIndex)
               return (
                 <button
                   key={event.id}
                   type="button"
-                  className={`chronology-event ${event.type} ${state}`}
+                  className={`chronology-event ${event.type} ${state} ${focus}`}
                   style={{ left: `${timelinePercent(event.year, timelineStart, timelineEnd)}%` }}
                   onClick={() => selectEvent(event)}
                   aria-label={`Inspect ${formatYear(event.year)} ${event.title}; ${state === 'future' ? 'after' : 'within or before'} current map snapshot`}

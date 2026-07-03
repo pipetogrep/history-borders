@@ -82,3 +82,16 @@
 .event-marker.active{box-shadow:0 0 0 1px rgba(255,253,247,0.82),0 0 0 13px rgba(140,106,53,0.10),0 16px 36px rgba(37,53,47,0.16);}
 @keyframes selectedEventReticle{0%{opacity:.72;transform:scale(.78);}72%,100%{opacity:0;transform:scale(1.28);}}
 @media (prefers-reduced-motion:reduce){.event-marker.active::before{animation:none;opacity:.32;}}
+
+/* documentary playhead: one labelled temporal needle, nearby beats only */
+.timeline-playhead{position:absolute;top:7px;bottom:7px;z-index:1;transform:translateX(-50%);pointer-events:none;transition:left 420ms cubic-bezier(.18,.82,.23,1);}
+.timeline-playhead::before{content:'';position:absolute;left:50%;top:11px;bottom:8px;width:1px;transform:translateX(-50%);background:linear-gradient(180deg,rgba(37,53,47,0),rgba(37,53,47,0.52) 18%,rgba(37,53,47,0.44) 70%,rgba(37,53,47,0));}
+.timeline-playhead span{position:absolute;left:50%;top:-1px;transform:translateX(-50%);border:1px solid rgba(54,63,55,0.16);border-radius:999px;background:rgba(255,253,247,0.92);box-shadow:0 8px 22px rgba(54,63,55,0.10);padding:3px 7px;color:var(--text-strong);font-size:0.56rem;font-weight:850;letter-spacing:0.08em;white-space:nowrap;}
+.chronology-event.distant::before{width:6px;height:6px;opacity:.32;box-shadow:none;}
+.chronology-event.near:not(.active)::before{opacity:.72;box-shadow:0 0 0 4px rgba(37,53,47,0.06);}
+.chronology-event.near:not(.active) span{opacity:.76;top:42px;color:var(--quiet);font-size:.50rem;}
+.chronology-event.near:not(.active) strong{opacity:1;top:53px;max-width:118px;border-color:transparent;background:transparent;box-shadow:none;padding:0;color:var(--muted);font-size:.58rem;line-height:1.05;}
+.chronology-event.focus.active strong{background:rgba(255,253,247,0.98);border-color:rgba(54,63,55,0.18);box-shadow:0 12px 28px rgba(37,53,47,0.14);}
+.chronology-event.focus.active::after{background:linear-gradient(180deg,rgba(37,53,47,0),rgba(37,53,47,0.62),rgba(37,53,47,0));}
+@media (max-width:720px){.timeline-playhead span{font-size:.52rem;padding:3px 6px;}.chronology-event.near:not(.active) strong{display:none;}.chronology-event.near:not(.active) span{top:43px;}}
+@media (prefers-reduced-motion:reduce){.timeline-playhead{transition:none;}}

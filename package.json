@@ -9,7 +9,7 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "validate:data": "node validate-data.mjs",
-    "verify:browser": "node verify.mjs && node mobile-verify.mjs && node legend-verify.mjs && node event-coherence-verify.mjs && node evidence-verify.mjs && node click-verify.mjs && node methodology-verify.mjs && node drag-verify.mjs && node transition-verify.mjs && node chronology-verify.mjs && node editorial-verify.mjs && node area-verify.mjs && node baseline-verify.mjs && node share-verify.mjs && node play-verify.mjs && node us-depth-verify.mjs && node bosnia-depth-verify.mjs && node event-focus-verify.mjs && node ottoman-aftermath-verify.mjs && node abbasid-fragmentation-verify.mjs && node frame-readout-verify.mjs && node british-decolonisation-verify.mjs",
+    "verify:browser": "node verify.mjs && node mobile-verify.mjs && node legend-verify.mjs && node event-coherence-verify.mjs && node evidence-verify.mjs && node click-verify.mjs && node methodology-verify.mjs && node drag-verify.mjs && node transition-verify.mjs && node chronology-verify.mjs && node editorial-verify.mjs && node area-verify.mjs && node baseline-verify.mjs && node share-verify.mjs && node play-verify.mjs && node us-depth-verify.mjs && node bosnia-depth-verify.mjs && node event-focus-verify.mjs && node ottoman-aftermath-verify.mjs && node abbasid-fragmentation-verify.mjs && node frame-readout-verify.mjs && node british-decolonisation-verify.mjs && node timeline-focus-verify.mjs",
     "verify:live": "node live-workers-verify.mjs"
   },
   "dependencies": {
