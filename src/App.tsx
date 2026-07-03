@@ -13,6 +13,10 @@ type InspectorItem =
   | { readonly kind: 'event'; readonly value: HistoricalEvent }
   | { readonly kind: 'location'; readonly value: KeyLocation }
 
+type ChronologyBeat =
+  | { readonly kind: 'snapshot'; readonly id: string; readonly year: number; readonly snapshotIndex: number; readonly title: string }
+  | { readonly kind: 'event'; readonly id: string; readonly year: number; readonly event: HistoricalEvent; readonly snapshotIndex: number; readonly title: string }
+
 const EARTH_RADIUS_KM = 6371.0088
 
 interface ShareRoute {
@@ -83,6 +87,13 @@ function timelinePercent(year: number, start: number, end: number): number {
   return Math.max(0, Math.min(100, ((year - start) / (end - start)) * 100))
 }
 
+function buildChronologyBeats(snapshots: readonly EmpireSnapshot[], events: readonly HistoricalEvent[]): readonly ChronologyBeat[] {
+  return [
+    ...snapshots.map((snapshot, index) => ({ kind: 'snapshot' as const, id: `snapshot-${snapshot.year}-${index}`, year: snapshot.year, snapshotIndex: index, title: snapshot.label })),
+    ...events.map((event) => ({ kind: 'event' as const, id: event.id, year: event.year, event, snapshotIndex: closestSnapshotIndex(snapshots, event.year), title: event.title })),
+  ].sort((a, b) => a.year === b.year ? (a.kind === 'snapshot' ? -1 : 1) : a.year - b.year)
+}
+
 function routeFromUrl(): ShareRoute {
   if (typeof window === 'undefined') return { empireId: empires[0].id, snapshotIndex: 1, eventId: null }
   const params = new URLSearchParams(window.location.search)
@@ -112,31 +123,32 @@ function App(): React.JSX.Element {
   const [isPlaying, setIsPlaying] = useState(false)
   const [shareStatus, setShareStatus] = useState<'idle' | 'copied'>('idle')
 
+  const chronologyBeats = useMemo(() => buildChronologyBeats(selectedEmpire.snapshots, selectedEmpire.events), [selectedEmpire])
+  const activeBeatIndex = Math.max(0, chronologyBeats.findIndex((beat) => activeEventId ? beat.kind === 'event' && beat.id === activeEventId : beat.kind === 'snapshot' && beat.snapshotIndex === snapshotIndex))
+  const currentBeat = chronologyBeats[activeBeatIndex] ?? chronologyBeats[0]
   const snapshot = selectedEmpire.snapshots[Math.min(snapshotIndex, selectedEmpire.snapshots.length - 1)]
   const activeEvent = selectedEmpire.events.find((event) => event.id === activeEventId) ?? null
   const visibleEvents = selectedEmpire.events.filter((event) => event.year <= snapshot.year || event.id === activeEventId)
-  const canStepBackward = snapshotIndex > 0
-  const canStepForward = snapshotIndex < selectedEmpire.snapshots.length - 1
-  const previousSnapshot = canStepBackward ? selectedEmpire.snapshots[snapshotIndex - 1] : null
-  const nextSnapshot = canStepForward ? selectedEmpire.snapshots[snapshotIndex + 1] : null
+  const canStepBackward = activeBeatIndex > 0
+  const canStepForward = activeBeatIndex < chronologyBeats.length - 1
+  const previousSnapshot = snapshotIndex > 0 ? selectedEmpire.snapshots[snapshotIndex - 1] : null
+  const nextSnapshot = snapshotIndex < selectedEmpire.snapshots.length - 1 ? selectedEmpire.snapshots[snapshotIndex + 1] : null
   const inspectedEvent = inspectorItem?.kind === 'event' ? inspectorItem.value : null
   const eventSnapshotOffset = inspectedEvent && inspectedEvent.year !== snapshot.year
-  const chronologyYears = [...selectedEmpire.snapshots.map((item) => item.year), ...selectedEmpire.events.map((event) => event.year)]
-  const timelineStart = Math.min(...chronologyYears)
-  const timelineEnd = Math.max(...chronologyYears)
+  const timelineStart = chronologyBeats[0]?.year ?? snapshot.year
+  const timelineEnd = chronologyBeats.at(-1)?.year ?? snapshot.year
   const currentAreaKm2 = approximateAreaKm2(snapshot)
   const previousAreaKm2 = previousSnapshot ? approximateAreaKm2(previousSnapshot) : null
   const areaDeltaLabel = formatAreaDelta(currentAreaKm2, previousAreaKm2)
 
   useEffect(() => {
-    if (!isPlaying) return undefined
+    if (!isPlaying || chronologyBeats.length < 2) return undefined
     const interval = window.setInterval(() => {
-      setSnapshotIndex((current) => current >= selectedEmpire.snapshots.length - 1 ? 0 : current + 1)
-      setActiveEventId(null)
-      setInspectorItem(null)
-    }, 1700)
+      const nextBeat = chronologyBeats[(activeBeatIndex + 1) % chronologyBeats.length]
+      applyChronologyBeat(nextBeat, { keepPlaying: true })
+    }, 1900)
     return () => window.clearInterval(interval)
-  }, [isPlaying, selectedEmpire.snapshots.length])
+  })
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -166,25 +178,44 @@ function App(): React.JSX.Element {
     setActiveEventId(null)
   }
 
-  function selectSnapshot(nextIndex: number): void {
-    setSnapshotIndex(nextIndex)
-    setActiveEventId(null)
-    setInspectorItem(null)
-    setIsPlaying(false)
+  function applyChronologyBeat(beat: ChronologyBeat, options: { readonly keepPlaying?: boolean } = {}): void {
+    setSnapshotIndex(beat.snapshotIndex)
+    if (beat.kind === 'event') {
+      setActiveEventId(beat.event.id)
+      setInspectorItem({ kind: 'event', value: beat.event })
+    } else {
+      setActiveEventId(null)
+      setInspectorItem(null)
+    }
+    if (!options.keepPlaying) setIsPlaying(false)
+  }
+
+
+  function selectBeat(nextIndex: number): void {
+    const beat = chronologyBeats[Math.max(0, Math.min(chronologyBeats.length - 1, nextIndex))]
+    if (beat) applyChronologyBeat(beat)
   }
 
   function stepSnapshot(direction: -1 | 1): void {
-    setSnapshotIndex((current) => Math.max(0, Math.min(selectedEmpire.snapshots.length - 1, current + direction)))
-    setActiveEventId(null)
-    setInspectorItem(null)
-    setIsPlaying(false)
+    const nextBeat = chronologyBeats[Math.max(0, Math.min(chronologyBeats.length - 1, activeBeatIndex + direction))]
+    if (nextBeat) applyChronologyBeat(nextBeat)
+  }
+
+  function stepMapSnapshot(direction: -1 | 1): void {
+    const nextIndex = Math.max(0, Math.min(selectedEmpire.snapshots.length - 1, snapshotIndex + direction))
+    const beat = chronologyBeats.find((item) => item.kind === 'snapshot' && item.snapshotIndex === nextIndex)
+    if (beat) applyChronologyBeat(beat)
   }
 
   function selectEvent(event: HistoricalEvent): void {
-    setActiveEventId(event.id)
-    setSnapshotIndex(closestSnapshotIndex(selectedEmpire.snapshots, event.year))
-    setInspectorItem({ kind: 'event', value: event })
-    setIsPlaying(false)
+    const beat = chronologyBeats.find((item) => item.kind === 'event' && item.id === event.id)
+    if (beat) applyChronologyBeat(beat)
+    else {
+      setActiveEventId(event.id)
+      setSnapshotIndex(closestSnapshotIndex(selectedEmpire.snapshots, event.year))
+      setInspectorItem({ kind: 'event', value: event })
+      setIsPlaying(false)
+    }
   }
 
   async function copyShareLink(): Promise<void> {
@@ -257,21 +288,21 @@ function App(): React.JSX.Element {
               )
             })}
           </div>
-          <input type="range" min="0" max={selectedEmpire.snapshots.length - 1} step="1" value={snapshotIndex} onChange={(event) => selectSnapshot(Number(event.target.value))} aria-label="Choose historical snapshot" />
-          <div className="timeline-labels">{selectedEmpire.snapshots.map((item) => <span key={item.year}>{formatYear(item.year)}</span>)}</div>
+          <input type="range" min="0" max={Math.max(0, chronologyBeats.length - 1)} step="1" value={activeBeatIndex} onChange={(event) => selectBeat(Number(event.target.value))} aria-label="Scrub through every map snapshot and historical event" />
+          <div className="timeline-labels">{chronologyBeats.map((item) => <span key={item.id} className={item.kind}>{formatYear(item.year)}</span>)}</div>
           <div className="transition-strip" aria-label="Map transition context">
-            <button type="button" onClick={() => stepSnapshot(-1)} disabled={!previousSnapshot}>
+            <button type="button" onClick={() => stepMapSnapshot(-1)} disabled={!previousSnapshot}>
               <span>Before</span>
               <strong>{previousSnapshot ? `${formatYear(previousSnapshot.year)} · ${previousSnapshot.label}` : 'Start of track'}</strong>
               <small>{previousSnapshot?.claim ?? 'No earlier snapshot for this track.'}</small>
             </button>
             <article>
-              <span>Now on the map</span>
-              <strong>{snapshot.label}</strong>
-              <p>{snapshot.change}</p>
+              <span>{currentBeat?.kind === 'event' ? 'Event driving the map' : 'Now on the map'}</span>
+              <strong>{currentBeat ? `${formatYear(currentBeat.year)} · ${currentBeat.title}` : snapshot.label}</strong>
+              <p>{currentBeat?.kind === 'event' ? currentBeat.event.summary : snapshot.change}</p>
               <p className="area-metric"><b>Approx. area</b> {formatArea(currentAreaKm2)} · {areaDeltaLabel}</p>
             </article>
-            <button type="button" onClick={() => stepSnapshot(1)} disabled={!nextSnapshot}>
+            <button type="button" onClick={() => stepMapSnapshot(1)} disabled={!nextSnapshot}>
               <span>After</span>
               <strong>{nextSnapshot ? `${formatYear(nextSnapshot.year)} · ${nextSnapshot.label}` : 'End of track'}</strong>
               <small>{nextSnapshot?.change ?? 'No later snapshot for this track.'}</small>
