@@ -18,16 +18,11 @@ const data = await page.evaluate(() => ({
   scrollWidth: document.documentElement.scrollWidth,
   innerWidth: window.innerWidth,
 }));
-const evidenceText = `${data.card ?? ''} ${data.inspector ?? ''}`;
-if (!evidenceText.includes('not a live tactical map') || !evidenceText.includes('accessed 2026-07-02') || !evidenceText.includes('control estimate')) {
-  errors.push('Expected modern-conflict provenance and date copy was not rendered.');
-}
-if (!evidenceText.includes('Evidence note') || !evidenceText.includes('What changed') || !evidenceText.includes('Evidence weight')) {
-  errors.push('Expected event-level evidence framing was not rendered.');
-}
-if (!evidenceText.includes('not mean the whole coloured area changed hands in that year') && !evidenceText.includes('not itself a border line')) {
-  errors.push('Expected explicit non-claim language was not rendered.');
-}
+const text = `${data.card ?? ''} ${data.inspector ?? ''}`;
+if (!text.includes('Assessed occupation/control') || !text.includes('Assessed control, July 2026')) errors.push('Expected selected historical context was not rendered.');
+if (!text.includes('Why now') || !text.includes('What changed') || !text.includes('On screen')) errors.push('Expected viewer-facing story rows were not rendered.');
+if (text.includes('Evidence weight') || text.includes('Geometry method') || text.includes('Source quality')) errors.push('Technical metadata leaked into the main viewing UI.');
+if (data.scrollWidth > data.innerWidth) errors.push(`Horizontal overflow: ${data.scrollWidth} > ${data.innerWidth}`);
 console.log(JSON.stringify({ data, errors }, null, 2));
 await browser.close();
 if (errors.length) throw new Error(errors.join('; '));
