@@ -258,7 +258,21 @@ function App(): React.JSX.Element {
           </div>
         </aside>
 
-        <HistoryGlobe empire={selectedEmpire} snapshot={snapshot} activeEvent={activeEvent} visibleEvents={visibleEvents} showEvents={showEvents} showLocations={showLocations} onSelectEvent={selectEvent} onSelectLocation={(location) => setInspectorItem({ kind: 'location', value: location })} />
+        <HistoryGlobe
+          empire={selectedEmpire}
+          snapshot={snapshot}
+          activeEvent={activeEvent}
+          frameKicker={`${activeBeatIndex + 1}/${chronologyBeats.length} · ${currentBeat?.kind === 'event' ? currentBeat.event.type : snapshot.layer}`}
+          frameTitle={currentBeat ? currentBeat.title : snapshot.label}
+          frameSummary={currentBeat?.kind === 'event' ? currentBeat.event.summary : (snapshot.change ?? snapshot.note)}
+          frameMetric={`${formatArea(currentAreaKm2)} · ${areaDeltaLabel}`}
+          frameProgress={chronologyBeats.length > 1 ? (activeBeatIndex / (chronologyBeats.length - 1)) * 100 : 100}
+          visibleEvents={visibleEvents}
+          showEvents={showEvents}
+          showLocations={showLocations}
+          onSelectEvent={selectEvent}
+          onSelectLocation={(location) => setInspectorItem({ kind: 'location', value: location })}
+        />
 
         <section className="timeline-shell" aria-label="Time controls">
           <div className="timeline-head">
