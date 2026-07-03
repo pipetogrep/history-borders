@@ -4,6 +4,7 @@ import { sourceCatalog } from './src/data/sources.ts'
 import './src/data/bosniaDepth.ts'
 import './src/data/ottomanAftermath.ts'
 import './src/data/abbasidFragmentation.ts'
+import './src/data/britishDecolonisation.ts'
 
 const world = JSON.parse(readFileSync(new URL('./public/countries-110m.json', import.meta.url), 'utf8'))
 const worldCountryNames = new Set(world.objects.countries.geometries.map((geometry) => geometry.properties?.name).filter(Boolean))
