@@ -42,7 +42,8 @@ const mobile = await page.evaluate(() => ({
 }));
 console.log(JSON.stringify({ desktop, mobile, errors }, null, 2));
 if (!desktop.masthead?.includes('The border record') || !desktop.masthead?.includes('Bosnia / Yugoslavia')) throw new Error('Editorial masthead missing selected track context.');
-if (!desktop.lead?.includes('Interpretation') || !desktop.method?.includes('Start with the year')) throw new Error('Editorial explainer/reading-guide content missing.');
+if (!desktop.lead?.includes('Interpretation')) throw new Error('Editorial interpretation content missing.');
+if (desktop.method) throw new Error('Methodology panel should be removed from editorial section.');
 if (desktop.leadRadius !== '0px' || desktop.inspectorRadius !== '0px') throw new Error('Below-map explainer still has rounded card treatment.');
 if (desktop.leadShadow !== 'none' || desktop.inspectorShadow !== 'none') throw new Error('Below-map explainer still has card shadows.');
 if (desktop.scrollWidth > desktop.innerWidth || mobile.scrollWidth > mobile.innerWidth) throw new Error('Editorial layout has horizontal overflow.');
