@@ -1,5 +1,7 @@
 .empire-extent { transform-origin: 50% 50%; }
 .empire-current { animation-name: layerReveal, layerSettle; animation-duration: 760ms, 920ms; animation-timing-function: cubic-bezier(.18,.82,.23,1), cubic-bezier(.18,.82,.23,1); }
+.recognised-baseline { fill: none; stroke: rgba(37, 53, 47, 0.62); stroke-width: 1.35; stroke-dasharray: 7 4; stroke-linejoin: round; stroke-linecap: round; pointer-events: none; filter: drop-shadow(0 1px 0 rgba(255,253,247,0.56)); }
+.legend-line { width: 24px; height: 0; border-top: 1.5px dashed rgba(37, 53, 47, 0.62); flex: 0 0 auto; }
 .empire-previous { pointer-events: none; opacity: 0; fill-opacity: 0.08 !important; stroke-opacity: 0.22; stroke-width: 1.8; stroke-dasharray: 2 4; animation: layerGhost 1050ms cubic-bezier(.18,.82,.23,1); }
 .transition-cue { position: absolute; left: 50%; top: 18px; translate: -50% 0; display: inline-flex; align-items: center; gap: 8px; max-width: min(620px, calc(100% - 32px)); border: 1px solid rgba(54, 63, 55, 0.14); border-radius: 999px; background: rgba(255, 253, 247, 0.78); color: var(--muted); backdrop-filter: blur(10px); padding: 7px 11px; font-size: 0.68rem; letter-spacing: 0.02em; box-shadow: 0 10px 28px rgba(54,63,55,0.09); animation: cueFloat 1050ms ease both; z-index: 4; }
 .transition-cue span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
