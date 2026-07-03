@@ -19,6 +19,7 @@ const desktop = await page.evaluate(() => {
   const timelineRect = document.querySelector('.timeline-shell')?.getBoundingClientRect()
   const meter = document.querySelector('.frame-meter span')
   const previousOutline = document.querySelector('.previous-frame-outline')
+  const eventThread = document.querySelector('.event-thread')
   const previousLegend = [...document.querySelectorAll('.map-legend div')].some((item) => item.textContent?.includes('previous frame'))
   const overlaps = (a, b) => Boolean(a && b && a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top)
   return {
@@ -28,6 +29,7 @@ const desktop = await page.evaluate(() => {
     overlapsTimeline: overlaps(readoutRect, timelineRect),
     meterWidth: meter ? getComputedStyle(meter).width : '',
     previousOutline: Boolean(previousOutline),
+    eventThread: Boolean(eventThread),
     previousLegend,
     scrollWidth: document.documentElement.scrollWidth,
     innerWidth: window.innerWidth,
@@ -46,6 +48,7 @@ console.log(JSON.stringify({ desktop, mobile, errors }, null, 2))
 if (!desktop.text.includes('Adams–Onís Treaty')) throw new Error('Desktop frame readout did not show selected event title')
 if (!desktop.text.includes('1819 CE')) throw new Error('Desktop frame readout did not show selected year')
 if (!desktop.previousOutline || !desktop.previousLegend) throw new Error('Previous-frame comparison outline or legend is missing')
+if (!desktop.eventThread) throw new Error('Projected event sequence thread is missing')
 if (desktop.overlapsLegend || desktop.overlapsTimeline) throw new Error('Frame readout overlaps critical globe furniture')
 if (desktop.scrollWidth > desktop.innerWidth) throw new Error('Desktop frame readout introduced horizontal overflow')
 if (!mobile.text.includes('Assessed control, July 2026')) throw new Error('Mobile frame readout did not update to selected event')
