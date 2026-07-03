@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { BookOpen, Crosshair, Search } from 'lucide-react'
+import { geoArea } from 'd3-geo'
 import './App.css'
 import './Chronology.css'
 import './Editorial.css'
@@ -12,7 +13,28 @@ type InspectorItem =
   | { readonly kind: 'event'; readonly value: HistoricalEvent }
   | { readonly kind: 'location'; readonly value: KeyLocation }
 
+const EARTH_RADIUS_KM = 6371.0088
+
 function formatYear(year: number): string { return year < 0 ? `${Math.abs(year)} BCE` : `${year} CE` }
+
+function approximateAreaKm2(snapshot: EmpireSnapshot): number {
+  return geoArea(snapshot.extent) * EARTH_RADIUS_KM * EARTH_RADIUS_KM
+}
+
+function formatArea(value: number): string {
+  if (!Number.isFinite(value)) return 'unknown area'
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(value >= 10_000_000 ? 1 : 2)}m km²`
+  if (value >= 10_000) return `${Math.round(value / 1_000).toLocaleString()}k km²`
+  return `${Math.round(value).toLocaleString()} km²`
+}
+
+function formatAreaDelta(current: number, previous: number | null): string {
+  if (previous === null || !Number.isFinite(previous)) return 'baseline snapshot'
+  const delta = current - previous
+  const direction = delta >= 0 ? '+' : '−'
+  const percent = previous > 0 ? ` (${direction}${Math.abs((delta / previous) * 100).toFixed(Math.abs(delta / previous) > 1 ? 0 : 1)}%)` : ''
+  return `${direction}${formatArea(Math.abs(delta))} vs previous${percent}`
+}
 
 function closestSnapshotIndex(snapshots: readonly EmpireSnapshot[], year: number): number {
   return snapshots.reduce((best, snapshot, index) => Math.abs(snapshot.year - year) < Math.abs(snapshots[best].year - year) ? index : best, 0)
@@ -91,6 +113,9 @@ function App(): React.JSX.Element {
   const chronologyYears = [...selectedEmpire.snapshots.map((item) => item.year), ...selectedEmpire.events.map((event) => event.year)]
   const timelineStart = Math.min(...chronologyYears)
   const timelineEnd = Math.max(...chronologyYears)
+  const currentAreaKm2 = approximateAreaKm2(snapshot)
+  const previousAreaKm2 = previousSnapshot ? approximateAreaKm2(previousSnapshot) : null
+  const areaDeltaLabel = formatAreaDelta(currentAreaKm2, previousAreaKm2)
 
   useEffect(() => {
     if (!isPlaying) return undefined
@@ -210,6 +235,7 @@ function App(): React.JSX.Element {
               <span>Map change now</span>
               <strong>{layerLabel(snapshot.layer)}</strong>
               <p>{snapshot.change}</p>
+              <p className="area-metric"><b>Approx. area</b> {formatArea(currentAreaKm2)} · {areaDeltaLabel}</p>
             </article>
             <button type="button" onClick={() => stepSnapshot(1)} disabled={!nextSnapshot}>
               <span>Next layer</span>
