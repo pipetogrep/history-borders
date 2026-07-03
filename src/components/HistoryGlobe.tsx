@@ -15,6 +15,7 @@ interface HistoryGlobeProps {
   readonly empire: Empire
   readonly snapshot: EmpireSnapshot
   readonly activeEvent: HistoricalEvent | null
+  readonly previousSnapshot: EmpireSnapshot | null
   readonly frameKicker: string
   readonly frameTitle: string
   readonly frameSummary: string
@@ -73,7 +74,7 @@ function layerLabel(layer: EmpireSnapshot['layer']): string {
   return 'schematic extent'
 }
 
-export function HistoryGlobe({ empire, snapshot, activeEvent, frameKicker, frameTitle, frameSummary, frameMetric, frameProgress, visibleEvents, showEvents, showLocations, onSelectEvent, onSelectLocation }: HistoryGlobeProps): React.JSX.Element {
+export function HistoryGlobe({ empire, snapshot, activeEvent, previousSnapshot, frameKicker, frameTitle, frameSummary, frameMetric, frameProgress, visibleEvents, showEvents, showLocations, onSelectEvent, onSelectLocation }: HistoryGlobeProps): React.JSX.Element {
   const [world, setWorld] = useState<GeoJSON.FeatureCollection | null>(null)
   const [rotation, setRotation] = useState<[number, number, number]>([-12, -18, 0])
   const [scale, setScale] = useState(initialScale)
@@ -110,6 +111,7 @@ export function HistoryGlobe({ empire, snapshot, activeEvent, frameKicker, frame
     return selected.length > 0 ? { type: 'FeatureCollection', features: selected } : targetSnapshot.extent
   }, [world])
   const snapshotGeometry = useMemo<GeoJSON.Feature | GeoJSON.FeatureCollection>(() => resolveSnapshotGeometry(snapshot), [resolveSnapshotGeometry, snapshot])
+  const previousSnapshotGeometry = useMemo<GeoJSON.Feature | GeoJSON.FeatureCollection | null>(() => previousSnapshot ? resolveSnapshotGeometry(previousSnapshot) : null, [previousSnapshot, resolveSnapshotGeometry])
   const recognisedBaseline = useMemo(() => {
     if (snapshot.layer !== 'control') return null
     const candidates = empire.snapshots.filter((item) => item.layer === 'recognised' && item.year <= snapshot.year)
@@ -230,6 +232,15 @@ export function HistoryGlobe({ empire, snapshot, activeEvent, frameKicker, frame
               aria-label={`Recognised border baseline ${recognisedBaseline.snapshot.label} ${formatYear(recognisedBaseline.snapshot.year)}`}
             />
           )}
+          {previousSnapshot && previousSnapshotGeometry && (
+            <path
+              key={`previous-outline-${empire.id}-${previousSnapshot.year}`}
+              d={path(previousSnapshotGeometry) ?? undefined}
+              className={`previous-frame-outline layer-${previousSnapshot.layer} uncertainty-${previousSnapshot.uncertainty ?? 'medium'}`}
+              clipPath="url(#landClip)"
+              aria-label={`Previous comparison frame ${previousSnapshot.label} ${formatYear(previousSnapshot.year)}`}
+            />
+          )}
           {transitionGhost && (
             <path
               key={`ghost-${transitionGhost.key}`}
@@ -274,6 +285,7 @@ export function HistoryGlobe({ empire, snapshot, activeEvent, frameKicker, frame
           </div>
         )}
         <div className="map-legend" aria-label="Map legend">
+          {previousSnapshot && <div><span className="legend-line previous" /> previous frame</div>}
           {recognisedBaseline && <div><span className="legend-line baseline" /> recognised border baseline</div>}
           <div><span className={`legend-swatch layer-${snapshot.layer}`} /> <strong>{layerLabel(snapshot.layer)}</strong></div>
           <div><span className="legend-dot event" /> event</div>
