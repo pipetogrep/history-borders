@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { empires } from './src/data/empires.ts'
 import { sourceCatalog } from './src/data/sources.ts'
+import './src/data/bosniaDepth.ts'
 
 const world = JSON.parse(readFileSync(new URL('./public/countries-110m.json', import.meta.url), 'utf8'))
 const worldCountryNames = new Set(world.objects.countries.geometries.map((geometry) => geometry.properties?.name).filter(Boolean))

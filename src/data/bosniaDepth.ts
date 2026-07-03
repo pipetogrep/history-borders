@@ -1,6 +1,6 @@
-import { empires } from './empires'
-import { sourceCatalog } from './sources'
-import type { Empire, HistoricalEvent } from '../types/history'
+import { empires } from './empires.ts'
+import { sourceCatalog } from './sources.ts'
+import type { Empire, HistoricalEvent } from '../types/history.ts'
 
 sourceCatalog['Siege of Sarajevo'] = {
   title: 'Siege of Sarajevo',
