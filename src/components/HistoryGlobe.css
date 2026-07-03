@@ -11,3 +11,13 @@
 @keyframes cueFloat { 0% { opacity: 0; transform: translateY(-4px); } 16% { opacity: 1; transform: translateY(0); } 82% { opacity: 1; } 100% { opacity: 0; } }
 @media (max-width: 720px) { .transition-cue { left: 12px; right: 12px; top: 96px; translate: none; justify-content: center; font-size: 0.62rem; } }
 @media (prefers-reduced-motion: reduce) { .empire-current, .empire-previous, .transition-cue { animation: none; } .empire-previous, .transition-cue { display: none; } }
+
+.frame-readout { position: absolute; right: 16px; top: 16px; z-index: 4; width: min(310px, calc(100% - 32px)); border: 1px solid rgba(54,63,55,0.14); border-radius: 18px; background: linear-gradient(180deg, rgba(255,253,247,0.78), rgba(255,253,247,0.58)); backdrop-filter: blur(12px); box-shadow: 0 18px 48px rgba(37,53,47,0.10); padding: 12px 13px 11px; color: var(--text); }
+.frame-readout-top { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 8px; color: var(--subtle); text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.58rem; font-weight: 850; }
+.frame-readout strong { display: block; color: var(--text-strong); font-family: var(--font-serif); font-size: clamp(1rem, 1.4vw, 1.32rem); line-height: 1.05; font-weight: 520; letter-spacing: -0.03em; }
+.frame-readout p { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin: 7px 0 9px; color: var(--muted); line-height: 1.42; font-size: 0.78rem; }
+.frame-meter { height: 2px; overflow: hidden; border-radius: 999px; background: rgba(37,53,47,0.12); }
+.frame-meter span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, rgba(37,53,47,0.76), rgba(140,106,53,0.64)); transition: width 420ms cubic-bezier(.18,.82,.23,1); }
+.frame-readout small { display: block; margin-top: 8px; color: var(--quiet); font-size: 0.64rem; letter-spacing: 0.03em; }
+@media (max-width: 720px) { .frame-readout { top: 88px; right: 12px; left: 12px; width: auto; padding: 10px 11px; } .frame-readout p { display: none; } }
+@media (prefers-reduced-motion: reduce) { .frame-meter span { transition: none; } }
