@@ -95,3 +95,7 @@
 .chronology-event.focus.active::after{background:linear-gradient(180deg,rgba(37,53,47,0),rgba(37,53,47,0.62),rgba(37,53,47,0));}
 @media (max-width:720px){.timeline-playhead span{font-size:.52rem;padding:3px 6px;}.chronology-event.near:not(.active) strong{display:none;}.chronology-event.near:not(.active) span{top:43px;}}
 @media (prefers-reduced-motion:reduce){.timeline-playhead{transition:none;}}
+
+
+/* natural earth tonal override: keep subtle country variation above older bundled rules */
+.country{fill:var(--land-fill,color-mix(in srgb,var(--earth-green) 58%,var(--earth-lowland))) !important;stroke:rgba(71,93,71,0.20);stroke-width:0.42;filter:drop-shadow(0 1px 0 rgba(255,253,247,0.16));}

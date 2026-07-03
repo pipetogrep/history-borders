@@ -74,6 +74,18 @@ function layerLabel(layer: EmpireSnapshot['layer']): string {
   return 'schematic extent'
 }
 
+function landTone(country: GeoJSON.Feature): string {
+  const [lon, lat] = geoCentroid(country)
+  const name = typeof country.properties?.name === 'string' ? country.properties.name : ''
+  const nameHash = Array.from(name).reduce((sum, char) => sum + char.charCodeAt(0), 0)
+  if (lat < -28) return nameHash % 2 === 0 ? '#b7c79b' : '#c2cfa9'
+  if (lat < 8) return nameHash % 3 === 0 ? '#c9bd8f' : '#b7c58f'
+  if (lat > 58) return '#d6d6c2'
+  if (lon > 20 && lon < 70 && lat > 10 && lat < 38) return '#d1bd87'
+  if (lat > 38) return nameHash % 2 === 0 ? '#b7c79e' : '#c7caa3'
+  return nameHash % 2 === 0 ? '#a9bf8a' : '#bdc895'
+}
+
 export function HistoryGlobe({ empire, snapshot, activeEvent, previousSnapshot, frameKicker, frameTitle, frameSummary, frameMetric, frameProgress, visibleEvents, showEvents, showLocations, onSelectEvent, onSelectLocation }: HistoryGlobeProps): React.JSX.Element {
   const [world, setWorld] = useState<GeoJSON.FeatureCollection | null>(null)
   const [rotation, setRotation] = useState<[number, number, number]>([-12, -18, 0])
@@ -228,7 +240,7 @@ export function HistoryGlobe({ empire, snapshot, activeEvent, previousSnapshot, 
               {world.features.map((country, index) => <path key={index} d={path(country) ?? undefined} />)}
             </clipPath>
           )}
-          {world?.features.map((country, index) => <path key={index} d={path(country) ?? undefined} className="country" />)}
+          {world?.features.map((country, index) => <path key={index} d={path(country) ?? undefined} className="country" style={{ '--land-fill': landTone(country) } as React.CSSProperties} />)}
           {recognisedBaseline && (
             <path
               key={`baseline-${empire.id}-${recognisedBaseline.snapshot.year}`}
