@@ -15,10 +15,13 @@ const before = await page.evaluate(() => ({
   innerWidth: window.innerWidth,
 }));
 await page.evaluate(() => document.querySelector('.transition-strip button:last-child')?.click());
-await new Promise(resolve => setTimeout(resolve, 400));
+await new Promise(resolve => setTimeout(resolve, 180));
 const after = await page.evaluate(() => ({
   transition: document.querySelector('.transition-strip')?.textContent,
   h1: document.querySelector('.timeline-head h1')?.textContent,
+  cue: document.querySelector('.transition-cue')?.textContent,
+  ghostCount: document.querySelectorAll('.empire-previous').length,
+  currentCount: document.querySelectorAll('.empire-current').length,
   scrollWidth: document.documentElement.scrollWidth,
   innerWidth: window.innerWidth,
 }));
@@ -26,6 +29,7 @@ await page.screenshot({ path: '/workspace/agent/history-borders-transition.png',
 console.log(JSON.stringify({ before, after, errors }, null, 2));
 if (!before.transition?.includes('Map change now') || !before.transition?.includes('control estimate')) throw new Error('Transition strip missing current layer semantics.');
 if (after.h1 === before.h1) throw new Error('Next transition button did not advance the active snapshot.');
+if (!after.cue?.includes('→') || after.ghostCount < 1 || after.currentCount < 1) throw new Error('Animated transition cue/previous layer ghost did not render.');
 if (before.scrollWidth > before.innerWidth || after.scrollWidth > after.innerWidth) throw new Error('Horizontal overflow detected in transition strip.');
 if (errors.length) throw new Error(`Browser errors: ${errors.join('; ')}`);
 await browser.close();
