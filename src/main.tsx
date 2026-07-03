@@ -7,6 +7,7 @@ import './data/bosniaDepth.ts'
 import './data/ottomanAftermath.ts'
 import './data/abbasidFragmentation.ts'
 import './data/britishDecolonisation.ts'
+import './data/romanAftermath.ts'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
