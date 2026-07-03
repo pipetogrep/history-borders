@@ -3,6 +3,7 @@ import { geoCentroid, geoDistance, geoGraticule10, geoOrthographic, geoPath } fr
 import { feature } from 'topojson-client'
 import type { Arc, GeometryObject, Topology } from 'topojson-specification'
 import { getSourceInfo } from '../data/sources'
+import './HistoryGlobe.css'
 import type { Empire, EmpireSnapshot, HistoricalEvent, KeyLocation } from '../types/history'
 
 interface WorldAtlasTopology {
@@ -20,6 +21,27 @@ interface HistoryGlobeProps {
   readonly showLocations: boolean
   readonly onSelectEvent: (event: HistoricalEvent) => void
   readonly onSelectLocation: (location: KeyLocation) => void
+}
+
+interface TransitionGhost {
+  readonly key: string
+  readonly geometry: GeoJSON.Feature | GeoJSON.FeatureCollection
+  readonly layer: EmpireSnapshot['layer']
+  readonly uncertainty: EmpireSnapshot['uncertainty']
+  readonly colour: string
+  readonly label: string
+  readonly year: number
+}
+
+interface RenderedSnapshot {
+  readonly key: string
+  readonly empireId: string
+  readonly geometry: GeoJSON.Feature | GeoJSON.FeatureCollection
+  readonly layer: EmpireSnapshot['layer']
+  readonly uncertainty: EmpireSnapshot['uncertainty']
+  readonly colour: string
+  readonly label: string
+  readonly year: number
 }
 
 const width = 760
@@ -75,6 +97,8 @@ export function HistoryGlobe({ empire, snapshot, activeEvent, visibleEvents, sho
   const [isDragging, setIsDragging] = useState(false)
   const previousEmpireId = useRef(empire.id)
   const previousActiveEventId = useRef(activeEvent?.id ?? null)
+  const previousRenderedSnapshot = useRef<RenderedSnapshot | null>(null)
+  const [transitionGhost, setTransitionGhost] = useState<TransitionGhost | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -99,6 +123,20 @@ export function HistoryGlobe({ empire, snapshot, activeEvent, visibleEvents, sho
     })
     return selected.length > 0 ? { type: 'FeatureCollection', features: selected } : snapshot.extent
   }, [snapshot, world])
+
+  useEffect(() => {
+    const key = `${empire.id}-${snapshot.year}-${snapshot.label}`
+    const previous = previousRenderedSnapshot.current
+    if (previous && previous.key !== key && previous.empireId === empire.id) {
+      setTransitionGhost({ key: previous.key, geometry: previous.geometry, layer: previous.layer, uncertainty: previous.uncertainty, colour: previous.colour, label: previous.label, year: previous.year })
+      const timeout = window.setTimeout(() => setTransitionGhost((current) => current?.key === previous.key ? null : current), 1050)
+      previousRenderedSnapshot.current = { key, empireId: empire.id, geometry: snapshotGeometry, layer: snapshot.layer, uncertainty: snapshot.uncertainty, colour: empire.colour, label: snapshot.label, year: snapshot.year }
+      return () => window.clearTimeout(timeout)
+    }
+    if (previous?.empireId !== empire.id) setTransitionGhost(null)
+    previousRenderedSnapshot.current = { key, empireId: empire.id, geometry: snapshotGeometry, layer: snapshot.layer, uncertainty: snapshot.uncertainty, colour: empire.colour, label: snapshot.label, year: snapshot.year }
+    return undefined
+  }, [empire.id, empire.colour, snapshot.year, snapshot.label, snapshot.layer, snapshot.uncertainty, snapshotGeometry])
 
   function fitCurrentLayer(): void {
     const target = activeEvent ? [activeEvent.location.lon, activeEvent.location.lat] : geoCentroid(snapshotGeometry)
@@ -191,8 +229,18 @@ export function HistoryGlobe({ empire, snapshot, activeEvent, visibleEvents, sho
             </clipPath>
           )}
           {world?.features.map((country, index) => <path key={index} d={path(country) ?? undefined} className="country" />)}
+          {transitionGhost && (
+            <path
+              key={`ghost-${transitionGhost.key}`}
+              d={path(transitionGhost.geometry) ?? undefined}
+              className={`empire-extent empire-land empire-previous layer-${transitionGhost.layer} uncertainty-${transitionGhost.uncertainty ?? 'medium'}`}
+              clipPath="url(#landClip)"
+              style={{ '--empire-colour': transitionGhost.colour } as React.CSSProperties}
+              aria-label={`Previous layer ${transitionGhost.label} ${formatYear(transitionGhost.year)}`}
+            />
+          )}
           <path key={`water-${empire.id}-${snapshot.year}`} d={path(snapshotGeometry) ?? undefined} className={`empire-extent empire-waterline ${layerClass} ${uncertaintyClass}`} style={{ '--empire-colour': empire.colour } as React.CSSProperties} />
-          <path key={`land-${empire.id}-${snapshot.year}`} d={path(snapshotGeometry) ?? undefined} className={`empire-extent empire-land ${layerClass} ${uncertaintyClass}`} clipPath="url(#landClip)" style={{ '--empire-colour': empire.colour } as React.CSSProperties} />
+          <path key={`land-${empire.id}-${snapshot.year}`} d={path(snapshotGeometry) ?? undefined} className={`empire-extent empire-land empire-current ${layerClass} ${uncertaintyClass}`} clipPath="url(#landClip)" style={{ '--empire-colour': empire.colour } as React.CSSProperties} />
         </svg>
 
         {showLocations && empire.locations.map((location) => {
@@ -215,6 +263,13 @@ export function HistoryGlobe({ empire, snapshot, activeEvent, visibleEvents, sho
           <span>{snapshot.uncertainty ?? 'medium'} uncertainty</span>
           {sourceDateLine(snapshot) && <span>{sourceDateLine(snapshot)}</span>}
         </div>
+        {transitionGhost && (
+          <div className="transition-cue" aria-live="polite">
+            <span>{formatYear(transitionGhost.year)} · {transitionGhost.label}</span>
+            <strong>→</strong>
+            <span>{formatYear(snapshot.year)} · {snapshot.label}</span>
+          </div>
+        )}
         <div className="map-legend" aria-label="Map legend">
           <div><span className={`legend-swatch layer-${snapshot.layer}`} /> <strong>{layerLabel(snapshot.layer)}</strong></div>
           <div><span className="legend-dot event" /> event</div>
