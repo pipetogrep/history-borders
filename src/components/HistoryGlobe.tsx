@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { geoCentroid, geoDistance, geoGraticule10, geoOrthographic, geoPath } from 'd3-geo'
 import { feature } from 'topojson-client'
 import type { Arc, GeometryObject, Topology } from 'topojson-specification'
-import { getSourceInfo } from '../data/sources'
 import './HistoryGlobe.css'
 import type { Empire, EmpireSnapshot, HistoricalEvent, KeyLocation } from '../types/history'
 
@@ -69,24 +68,6 @@ function layerLabel(layer: EmpireSnapshot['layer']): string {
   return 'schematic extent'
 }
 
-function qualityLabel(snapshot: EmpireSnapshot): string {
-  if (snapshot.provenanceLabel) return snapshot.provenanceLabel
-  if (snapshot.countryNames?.length) return 'Natural Earth'
-  if (snapshot.layer === 'control') return 'control estimate'
-  if (snapshot.layer === 'recognised') return 'legal claim'
-  return 'schematic'
-}
-
-function sourceDateLine(snapshot: EmpireSnapshot): string | null {
-  if (snapshot.asOf) return `as of ${snapshot.asOf}`
-  if (!snapshot.source) return null
-  const info = getSourceInfo(snapshot.source)
-  if (!info) return null
-  if (info.asOf) return `as of ${info.asOf}`
-  if (info.publishedAt) return `published ${info.publishedAt}`
-  return null
-}
-
 export function HistoryGlobe({ empire, snapshot, activeEvent, visibleEvents, showEvents, showLocations, onSelectEvent, onSelectLocation }: HistoryGlobeProps): React.JSX.Element {
   const [world, setWorld] = useState<GeoJSON.FeatureCollection | null>(null)
   const [rotation, setRotation] = useState<[number, number, number]>([-12, -18, 0])
@@ -115,14 +96,21 @@ export function HistoryGlobe({ empire, snapshot, activeEvent, visibleEvents, sho
   const projection = useMemo(() => geoOrthographic().scale(scale).translate([width / 2, height / 2]).rotate(rotation).clipAngle(90), [rotation, scale])
   const path = useMemo(() => geoPath(projection), [projection])
   const listedEvents = visibleEvents.slice(-5)
-  const snapshotGeometry = useMemo<GeoJSON.Feature | GeoJSON.FeatureCollection>(() => {
-    if (!world || !snapshot.countryNames?.length) return snapshot.extent
+  const resolveSnapshotGeometry = useCallback((targetSnapshot: EmpireSnapshot): GeoJSON.Feature | GeoJSON.FeatureCollection => {
+    if (!world || !targetSnapshot.countryNames?.length) return targetSnapshot.extent
     const selected = world.features.filter((country) => {
       const name = typeof country.properties?.name === 'string' ? country.properties.name : null
-      return name ? snapshot.countryNames?.includes(name) : false
+      return name ? targetSnapshot.countryNames?.includes(name) : false
     })
-    return selected.length > 0 ? { type: 'FeatureCollection', features: selected } : snapshot.extent
-  }, [snapshot, world])
+    return selected.length > 0 ? { type: 'FeatureCollection', features: selected } : targetSnapshot.extent
+  }, [world])
+  const snapshotGeometry = useMemo<GeoJSON.Feature | GeoJSON.FeatureCollection>(() => resolveSnapshotGeometry(snapshot), [resolveSnapshotGeometry, snapshot])
+  const recognisedBaseline = useMemo(() => {
+    if (snapshot.layer !== 'control') return null
+    const candidates = empire.snapshots.filter((item) => item.layer === 'recognised' && item.year <= snapshot.year)
+    const baseline = candidates.at(-1)
+    return baseline ? { snapshot: baseline, geometry: resolveSnapshotGeometry(baseline) } : null
+  }, [empire.snapshots, resolveSnapshotGeometry, snapshot])
 
   useEffect(() => {
     const key = `${empire.id}-${snapshot.year}-${snapshot.label}`
@@ -161,7 +149,6 @@ export function HistoryGlobe({ empire, snapshot, activeEvent, visibleEvents, sho
     else setScale((current) => snapshot.scale ?? current)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [empire.id, snapshot, snapshotGeometry, activeEvent?.id])
-  const snapshotSource = snapshot.source ? getSourceInfo(snapshot.source) : undefined
   const layerClass = `layer-${snapshot.layer}`
   const uncertaintyClass = `uncertainty-${snapshot.uncertainty ?? 'medium'}`
 
@@ -229,6 +216,15 @@ export function HistoryGlobe({ empire, snapshot, activeEvent, visibleEvents, sho
             </clipPath>
           )}
           {world?.features.map((country, index) => <path key={index} d={path(country) ?? undefined} className="country" />)}
+          {recognisedBaseline && (
+            <path
+              key={`baseline-${empire.id}-${recognisedBaseline.snapshot.year}`}
+              d={path(recognisedBaseline.geometry) ?? undefined}
+              className="recognised-baseline"
+              clipPath="url(#landClip)"
+              aria-label={`Recognised border baseline ${recognisedBaseline.snapshot.label} ${formatYear(recognisedBaseline.snapshot.year)}`}
+            />
+          )}
           {transitionGhost && (
             <path
               key={`ghost-${transitionGhost.key}`}
@@ -258,11 +254,6 @@ export function HistoryGlobe({ empire, snapshot, activeEvent, visibleEvents, sho
         })}
 
         <div className="globe-hint">drag globe · scroll to zoom</div>
-        <div className="provenance-badges" aria-label="Layer provenance">
-          <span>{qualityLabel(snapshot)}</span>
-          <span>{snapshot.uncertainty ?? 'medium'} uncertainty</span>
-          {sourceDateLine(snapshot) && <span>{sourceDateLine(snapshot)}</span>}
-        </div>
         {transitionGhost && (
           <div className="transition-cue" aria-live="polite">
             <span>{formatYear(transitionGhost.year)} · {transitionGhost.label}</span>
@@ -271,6 +262,7 @@ export function HistoryGlobe({ empire, snapshot, activeEvent, visibleEvents, sho
           </div>
         )}
         <div className="map-legend" aria-label="Map legend">
+          {recognisedBaseline && <div><span className="legend-line baseline" /> recognised border baseline</div>}
           <div><span className={`legend-swatch layer-${snapshot.layer}`} /> <strong>{layerLabel(snapshot.layer)}</strong></div>
           <div><span className="legend-dot event" /> event</div>
           <div><span className="legend-dot conflict" /> battle / war</div>
@@ -285,24 +277,8 @@ export function HistoryGlobe({ empire, snapshot, activeEvent, visibleEvents, sho
       </div>
       <aside className="snapshot-card" style={{ '--empire-colour': empire.colour } as React.CSSProperties}>
         <span className="eyebrow">{formatYear(snapshot.year)}</span>
-        <span className={`layer-pill ${layerClass}`}>{layerLabel(snapshot.layer)} · {qualityLabel(snapshot)}</span>
         <h2>{snapshot.label}</h2>
         <p>{snapshot.note}</p>
-        {(snapshot.claim || snapshot.change || snapshot.geometry) && (
-          <dl className="snapshot-evidence">
-            <div><dt>Layer type</dt><dd>{layerLabel(snapshot.layer)}</dd></div>
-            {snapshot.claim && <div><dt>Map layer basis</dt><dd>{snapshot.claim}</dd></div>}
-            {snapshot.change && <div><dt>Change shown</dt><dd>{snapshot.change}</dd></div>}
-            <div><dt>Geometry</dt><dd>{snapshot.countryNames?.length ? `Natural Earth country geometry: ${snapshot.countryNames.join(', ')}.` : (snapshot.geometry ?? 'Approximate interpretive geometry.')}</dd></div>
-            {snapshot.geometryMethod && <div><dt>Geometry method</dt><dd>{snapshot.geometryMethod}</dd></div>}
-            {snapshot.geometrySource && (() => {
-              const geometrySource = getSourceInfo(snapshot.geometrySource)
-              return <div><dt>Geometry source</dt><dd>{geometrySource ? <a href={geometrySource.url} target="_blank" rel="noreferrer">{geometrySource.title}</a> : snapshot.geometrySource}</dd></div>
-            })()}
-            <div><dt>Source quality</dt><dd>{snapshot.sourceQuality ?? 'schematic'} · {qualityLabel(snapshot)}{sourceDateLine(snapshot) ? ` · ${sourceDateLine(snapshot)}` : ''}</dd></div>
-            <div><dt>Confidence</dt><dd>{snapshot.confidence ?? 'medium'} confidence · {snapshot.uncertainty ?? 'medium'} geometry uncertainty{snapshotSource ? <> · <a href={snapshotSource.url} target="_blank" rel="noreferrer">{snapshotSource.title}</a></> : null}</dd></div>
-          </dl>
-        )}
         {activeEvent && (
           <div className="active-event-card">
             <span>{formatYear(activeEvent.year)} · {activeEvent.type}</span>
