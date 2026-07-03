@@ -19,7 +19,7 @@ const data = await page.evaluate(() => ({
   innerWidth: window.innerWidth,
 }));
 const evidenceText = `${data.card ?? ''} ${data.inspector ?? ''}`;
-if (!evidenceText.includes('not a live tactical map') || !evidenceText.includes('accessed 2026-07-02') || !evidenceText.includes('occupation/control overlay')) {
+if (!evidenceText.includes('not a live tactical map') || !evidenceText.includes('accessed 2026-07-02') || !evidenceText.includes('control estimate')) {
   errors.push('Expected modern-conflict provenance and date copy was not rendered.');
 }
 console.log(JSON.stringify({ data, errors }, null, 2));
