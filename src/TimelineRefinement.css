@@ -37,3 +37,13 @@
 .event-list button:hover,.event-list button:focus-visible{background:rgba(255,253,247,0.48);color:var(--text-strong);outline:none;}
 .event-list span{font-size:0.57rem;margin-bottom:3px;}
 .active-event-card{border-left-color:rgba(140,106,53,0.52);margin-top:12px;padding-left:11px;}
+
+
+/* visible broadcast-style before/current/after context tightens map-time coupling */
+.transition-strip{grid-template-columns:minmax(0,.82fr) minmax(0,1.18fr) minmax(0,.82fr);gap:0;border-top:1px solid rgba(54,63,55,0.14);border-bottom:1px solid rgba(54,63,55,0.10);}
+.transition-strip article,.transition-strip button{display:block;border:0;border-radius:0;background:transparent;padding:10px 12px;box-shadow:none;}
+.transition-strip article{border-left:1px solid rgba(54,63,55,0.14);border-right:1px solid rgba(54,63,55,0.14);background:linear-gradient(90deg,rgba(140,106,53,0.07),rgba(255,253,247,0.18));}
+.transition-strip button:not(:disabled):hover,.transition-strip button:not(:disabled):focus-visible{background:rgba(255,253,247,0.42);outline:none;}
+.transition-strip button:disabled{opacity:.42;}
+.transition-strip strong{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+@media (max-width:720px){.transition-strip{grid-template-columns:1fr;}.transition-strip article{border:0;border-top:1px solid rgba(54,63,55,0.12);border-bottom:1px solid rgba(54,63,55,0.12);}}
