@@ -320,7 +320,7 @@ export function HistoryGlobe({ empire, snapshot, activeEvent, previousSnapshot, 
         <div className="event-list">
           {listedEvents.map((event) => (
             <button key={event.id} type="button" className={activeEvent?.id === event.id ? 'active' : ''} onClick={() => onSelectEvent(event)}>
-              <span>{formatYear(event.year} · {event.type}</span>{event.title}
+              <span>{formatYear(event.year)} · {event.type}</span>{event.title}
             </button>
           ))}
         </div>
