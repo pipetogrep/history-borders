@@ -5,6 +5,7 @@ export interface SourceInfo {
   readonly note: string
   readonly publishedAt?: string
   readonly accessedAt?: string
+  readonly asOf?: string
 }
 
 export const sourceCatalog: Record<string, SourceInfo> = {
@@ -52,9 +53,9 @@ export const sourceCatalog: Record<string, SourceInfo> = {
   'War in Donbas': { title: 'War in Donbas', url: 'https://en.wikipedia.org/wiki/War_in_Donbas', kind: 'event chronology', note: 'Eastern Ukraine control-line context.' },
   '2022 Russian invasion of Ukraine': { title: '2022 Russian invasion of Ukraine', url: 'https://en.wikipedia.org/wiki/Russian_invasion_of_Ukraine', kind: 'event chronology', note: 'Full-scale invasion context.' },
   '2022 Kherson counteroffensive': { title: '2022 Kherson counteroffensive', url: 'https://en.wikipedia.org/wiki/2022_Kherson_counteroffensive', kind: 'event chronology', note: 'Southern control-line change marker.' },
-  'ISW and Russia Matters, July 1 2026': { title: 'ISW / Russia Matters, July 2026', url: 'https://understandingwar.org/research/russia-ukraine/russian-offensive-campaign-assessment-july-1-2026/', kind: 'modern assessment', note: 'Open-source current control assessment; pair with Russia Matters area estimates.', publishedAt: '2026-07-01', accessedAt: '2026-07-02' },
+  'ISW and Russia Matters, July 1 2026': { title: 'ISW / Russia Matters, July 2026', url: 'https://www.russiamatters.org/news/russia-ukraine-war-report-card/russia-ukraine-war-report-card-july-1-2026', kind: 'modern assessment', note: 'Open-source current control assessment; Russia Matters figures are explicitly as of June 30, 2026 and should not be treated as live tactical linework.', publishedAt: '2026-07-01', accessedAt: '2026-07-02', asOf: '2026-06-30' },
   'ISW assessed control of terrain July 1 2026': { title: 'ISW assessed control of terrain, July 1 2026', url: 'https://understandingwar.org/research/russia-ukraine/russian-offensive-campaign-assessment-july-1-2026/', kind: 'modern assessment', note: 'Current conflict-control source.', publishedAt: '2026-07-01', accessedAt: '2026-07-02' },
-  'Russia Matters war report card July 1 2026': { title: 'Russia Matters war report card, July 1 2026', url: 'https://www.russiamatters.org/news/russia-ukraine-war-report-card/russia-ukraine-war-report-card-july-1-2026', kind: 'modern assessment', note: 'Area-control estimates for Russia-Ukraine war.', publishedAt: '2026-07-01', accessedAt: '2026-07-02' },
+  'Russia Matters war report card July 1 2026': { title: 'Russia Matters war report card, July 1 2026', url: 'https://www.russiamatters.org/news/russia-ukraine-war-report-card/russia-ukraine-war-report-card-july-1-2026', kind: 'modern assessment', note: 'Area-control estimates for Russia-Ukraine war; territorial-control figures are as of June 30, 2026.', publishedAt: '2026-07-01', accessedAt: '2026-07-02', asOf: '2026-06-30' },
   'Congress of Berlin': { title: 'Congress of Berlin', url: 'https://en.wikipedia.org/wiki/Congress_of_Berlin', kind: 'treaty', note: 'Bosnian administrative transition in 1878.' },
   'Bosnian Crisis': { title: 'Bosnian Crisis', url: 'https://en.wikipedia.org/wiki/Bosnian_Crisis', kind: 'event chronology', note: '1908 annexation crisis.' },
   'Assassination of Archduke Franz Ferdinand': { title: 'Assassination of Archduke Franz Ferdinand', url: 'https://en.wikipedia.org/wiki/Assassination_of_Archduke_Franz_Ferdinand', kind: 'event chronology', note: 'Sarajevo event marker.' },
