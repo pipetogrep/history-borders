@@ -22,5 +22,12 @@ const evidenceText = `${data.card ?? ''} ${data.inspector ?? ''}`;
 if (!evidenceText.includes('not a live tactical map') || !evidenceText.includes('accessed 2026-07-02') || !evidenceText.includes('control estimate')) {
   errors.push('Expected modern-conflict provenance and date copy was not rendered.');
 }
+if (!evidenceText.includes('Evidence note') || !evidenceText.includes('What changed') || !evidenceText.includes('Evidence weight')) {
+  errors.push('Expected event-level evidence framing was not rendered.');
+}
+if (!evidenceText.includes('not mean the whole coloured area changed hands in that year') && !evidenceText.includes('not itself a border line')) {
+  errors.push('Expected explicit non-claim language was not rendered.');
+}
 console.log(JSON.stringify({ data, errors }, null, 2));
 await browser.close();
+if (errors.length) throw new Error(errors.join('; '));
