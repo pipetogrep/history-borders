@@ -18,6 +18,8 @@
 .editorial-page .event-facts { display: grid; grid-template-columns: 1fr; gap: 0; margin-top: 16px; border-top: 1px solid rgba(37,53,47,0.18); }
 .editorial-page .event-facts div { border: 0; border-bottom: 1px solid rgba(37,53,47,0.12); border-radius: 0; background: transparent; padding: 10px 0; }
 .editorial-page .event-facts dd { font-size: 0.8rem; }
+.editorial-page .event-facts .evidence-note { border-top: 2px solid rgba(37,53,47,0.72); padding-top: 12px; }
+.editorial-page .event-facts .evidence-note dd { color: var(--text-strong); font-family: var(--font-serif); font-size: clamp(0.95rem, 1.2vw, 1.08rem); line-height: 1.34; }
 .editorial-page .source-card { margin-top: 16px; border: 1px solid rgba(37,53,47,0.18); border-width: 1px 0; border-radius: 0; background: transparent; padding: 12px 0; }
 .newspaper-method { display: grid; grid-template-columns: minmax(260px, 0.72fr) minmax(0, 1fr); gap: clamp(18px, 3vw, 36px); margin-top: 28px; padding-top: 18px !important; border-top: 1px solid rgba(37,53,47,0.2) !important; }
 .newspaper-method h2 { font-size: clamp(1.55rem, 2.7vw, 3rem); line-height: 0.98; letter-spacing: -0.055em; text-wrap: balance; }
