@@ -15,6 +15,11 @@ interface HistoryGlobeProps {
   readonly empire: Empire
   readonly snapshot: EmpireSnapshot
   readonly activeEvent: HistoricalEvent | null
+  readonly frameKicker: string
+  readonly frameTitle: string
+  readonly frameSummary: string
+  readonly frameMetric: string
+  readonly frameProgress: number
   readonly visibleEvents: readonly HistoricalEvent[]
   readonly showEvents: boolean
   readonly showLocations: boolean
@@ -68,7 +73,7 @@ function layerLabel(layer: EmpireSnapshot['layer']): string {
   return 'schematic extent'
 }
 
-export function HistoryGlobe({ empire, snapshot, activeEvent, visibleEvents, showEvents, showLocations, onSelectEvent, onSelectLocation }: HistoryGlobeProps): React.JSX.Element {
+export function HistoryGlobe({ empire, snapshot, activeEvent, frameKicker, frameTitle, frameSummary, frameMetric, frameProgress, visibleEvents, showEvents, showLocations, onSelectEvent, onSelectLocation }: HistoryGlobeProps): React.JSX.Element {
   const [world, setWorld] = useState<GeoJSON.FeatureCollection | null>(null)
   const [rotation, setRotation] = useState<[number, number, number]>([-12, -18, 0])
   const [scale, setScale] = useState(initialScale)
@@ -254,6 +259,13 @@ export function HistoryGlobe({ empire, snapshot, activeEvent, visibleEvents, sho
         })}
 
         <div className="globe-hint">drag globe · scroll to zoom</div>
+        <div className="frame-readout" aria-label="Current historical frame">
+          <div className="frame-readout-top"><span>{frameKicker}</span><span>{formatYear(snapshot.year)}</span></div>
+          <strong>{frameTitle}</strong>
+          <p>{frameSummary}</p>
+          <div className="frame-meter" aria-hidden="true"><span style={{ width: `${frameProgress}%` }} /></div>
+          <small>{frameMetric}</small>
+        </div>
         {transitionGhost && (
           <div className="transition-cue" aria-live="polite">
             <span>{formatYear(transitionGhost.year)} · {transitionGhost.label}</span>
