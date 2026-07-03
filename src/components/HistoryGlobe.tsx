@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { geoCentroid, geoDistance, geoGraticule10, geoOrthographic, geoPath } from 'd3-geo'
 import { feature } from 'topojson-client'
 import type { Arc, GeometryObject, Topology } from 'topojson-specification'
+import { getSourceInfo } from '../data/sources'
 import type { Empire, EmpireSnapshot, HistoricalEvent, KeyLocation } from '../types/history'
 
 interface WorldAtlasTopology {
@@ -38,6 +39,14 @@ function isVisible(rotation: readonly [number, number, number], lon: number, lat
   return geoDistance([lon, lat], centre) < Math.PI / 2
 }
 
+function layerLabel(layer: EmpireSnapshot['layer']): string {
+  if (layer === 'recognised') return 'recognised border claim'
+  if (layer === 'control') return 'occupation/control overlay'
+  if (layer === 'administrative') return 'administrative frame'
+  if (layer === 'influence') return 'influence zone'
+  return 'imperial extent'
+}
+
 export function HistoryGlobe({ empire, snapshot, activeEvent, visibleEvents, showEvents, showLocations, onSelectEvent, onSelectLocation }: HistoryGlobeProps): React.JSX.Element {
   const [world, setWorld] = useState<GeoJSON.FeatureCollection | null>(null)
   const [rotation, setRotation] = useState<[number, number, number]>([-12, -18, 0])
@@ -58,14 +67,25 @@ export function HistoryGlobe({ empire, snapshot, activeEvent, visibleEvents, sho
     return () => { cancelled = true }
   }, [])
 
-  useEffect(() => {
-    const target = activeEvent ? [activeEvent.location.lon, activeEvent.location.lat] : geoCentroid(snapshot.extent)
-    if (Number.isFinite(target[0]) && Number.isFinite(target[1])) setRotation([-target[0], -target[1], 0])
-  }, [snapshot, activeEvent])
-
   const projection = useMemo(() => geoOrthographic().scale(scale).translate([width / 2, height / 2]).rotate(rotation).clipAngle(90), [rotation, scale])
   const path = useMemo(() => geoPath(projection), [projection])
   const listedEvents = visibleEvents.slice(-5)
+  const snapshotGeometry = useMemo<GeoJSON.Feature | GeoJSON.FeatureCollection>(() => {
+    if (!world || !snapshot.countryNames?.length) return snapshot.extent
+    const selected = world.features.filter((country) => {
+      const name = typeof country.properties?.name === 'string' ? country.properties.name : null
+      return name ? snapshot.countryNames?.includes(name) : false
+    })
+    return selected.length > 0 ? { type: 'FeatureCollection', features: selected } : snapshot.extent
+  }, [snapshot, world])
+
+  useEffect(() => {
+    const target = activeEvent ? [activeEvent.location.lon, activeEvent.location.lat] : geoCentroid(snapshotGeometry)
+    if (Number.isFinite(target[0]) && Number.isFinite(target[1])) setRotation([-target[0], -target[1], 0])
+    setScale(snapshot.scale ?? initialScale)
+  }, [snapshot, snapshotGeometry, activeEvent])
+  const snapshotSource = snapshot.source ? getSourceInfo(snapshot.source) : undefined
+  const layerClass = `layer-${snapshot.layer}`
 
   function rotateBy(delta: number): void { setRotation(([lambda, phi, gamma]) => [lambda + delta, phi, gamma]) }
 
@@ -126,25 +146,31 @@ export function HistoryGlobe({ empire, snapshot, activeEvent, visibleEvents, sho
             </clipPath>
           )}
           {world?.features.map((country, index) => <path key={index} d={path(country) ?? undefined} className="country" />)}
-          <path d={path(snapshot.extent) ?? undefined} className="empire-extent empire-waterline" style={{ '--empire-colour': empire.colour } as React.CSSProperties} />
-          <path d={path(snapshot.extent) ?? undefined} className="empire-extent empire-land" clipPath="url(#landClip)" style={{ '--empire-colour': empire.colour } as React.CSSProperties} />
+          <path d={path(snapshotGeometry) ?? undefined} className={`empire-extent empire-waterline ${layerClass}`} style={{ '--empire-colour': empire.colour } as React.CSSProperties} />
+          <path d={path(snapshotGeometry) ?? undefined} className={`empire-extent empire-land ${layerClass}`} clipPath="url(#landClip)" style={{ '--empire-colour': empire.colour } as React.CSSProperties} />
         </svg>
 
         {showLocations && empire.locations.map((location) => {
           if (!isVisible(rotation, location.lon, location.lat)) return null
           const projected = projection([location.lon, location.lat])
           if (!projected) return null
-          return <button key={location.name} type="button" className="map-marker location-marker" style={{ left: `${(projected[0] / width) * 100}%`, top: `${(projected[1] / height) * 100}%` }} onClick={() => onSelectLocation(location)} aria-label={`Inspect ${location.name}`}><span /></button>
+          return <button key={location.name} type="button" className="map-marker location-marker" data-label={location.name} style={{ left: `${(projected[0] / width) * 100}%`, top: `${(projected[1] / height) * 100}%` }} onClick={() => onSelectLocation(location)} aria-label={`Inspect ${location.name}`}><span /></button>
         })}
         {showEvents && visibleEvents.map((event) => {
           if (!isVisible(rotation, event.location.lon, event.location.lat)) return null
           const projected = projection([event.location.lon, event.location.lat])
           if (!projected) return null
           const active = activeEvent?.id === event.id
-          return <button key={event.id} type="button" className={`map-marker event-marker ${event.type} ${active ? 'active' : ''}`} style={{ left: `${(projected[0] / width) * 100}%`, top: `${(projected[1] / height) * 100}%` }} onClick={() => onSelectEvent(event)} aria-label={`Inspect ${event.title}`}><span /></button>
+          return <button key={event.id} type="button" className={`map-marker event-marker ${event.type} ${active ? 'active' : ''}`} data-label={`${formatYear(event.year)} · ${event.title}`} style={{ left: `${(projected[0] / width) * 100}%`, top: `${(projected[1] / height) * 100}%` }} onClick={() => onSelectEvent(event)} aria-label={`Inspect ${event.title}`}><span /></button>
         })}
 
         <div className="globe-hint">drag globe · scroll to zoom</div>
+        <div className="map-legend" aria-label="Map legend">
+          <div><span className={`legend-swatch layer-${snapshot.layer}`} /> <strong>{layerLabel(snapshot.layer)}</strong></div>
+          <div><span className="legend-dot event" /> event</div>
+          <div><span className="legend-dot conflict" /> battle / war</div>
+          <div><span className="legend-dot place" /> place</div>
+        </div>
         <div className="globe-actions" aria-label="Globe controls">
           <button type="button" onClick={() => rotateBy(-18)} aria-label="Rotate globe west">←</button>
           <button type="button" onClick={() => rotateBy(18)} aria-label="Rotate globe east">→</button>
@@ -152,8 +178,23 @@ export function HistoryGlobe({ empire, snapshot, activeEvent, visibleEvents, sho
       </div>
       <aside className="snapshot-card" style={{ '--empire-colour': empire.colour } as React.CSSProperties}>
         <span className="eyebrow">{formatYear(snapshot.year)}</span>
+        <span className={`layer-pill ${layerClass}`}>{layerLabel(snapshot.layer)}</span>
         <h2>{snapshot.label}</h2>
         <p>{snapshot.note}</p>
+        {(snapshot.claim || snapshot.change || snapshot.geometry) && (
+          <dl className="snapshot-evidence">
+            <div><dt>Layer type</dt><dd>{layerLabel(snapshot.layer)}</dd></div>
+            {snapshot.claim && <div><dt>Map layer basis</dt><dd>{snapshot.claim}</dd></div>}
+            {snapshot.change && <div><dt>Change shown</dt><dd>{snapshot.change}</dd></div>}
+            <div><dt>Geometry</dt><dd>{snapshot.countryNames?.length ? `Natural Earth country geometry: ${snapshot.countryNames.join(', ')}.` : (snapshot.geometry ?? 'Approximate interpretive geometry.')}</dd></div>
+            {snapshot.geometryMethod && <div><dt>Geometry method</dt><dd>{snapshot.geometryMethod}</dd></div>}
+            {snapshot.geometrySource && (() => {
+              const geometrySource = getSourceInfo(snapshot.geometrySource)
+              return <div><dt>Geometry source</dt><dd>{geometrySource ? <a href={geometrySource.url} target="_blank" rel="noreferrer">{geometrySource.title}</a> : snapshot.geometrySource}</dd></div>
+            })()}
+            <div><dt>Confidence</dt><dd>{snapshot.confidence ?? 'medium'} confidence · {snapshot.uncertainty ?? 'medium'} geometry uncertainty{snapshotSource ? <> · <a href={snapshotSource.url} target="_blank" rel="noreferrer">{snapshotSource.title}</a></> : null}</dd></div>
+          </dl>
+        )}
         {activeEvent && (
           <div className="active-event-card">
             <span>{formatYear(activeEvent.year)} · {activeEvent.type}</span>
