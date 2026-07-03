@@ -158,6 +158,12 @@ export function HistoryGlobe({ empire, snapshot, activeEvent, previousSnapshot, 
   }, [empire.id, snapshot, snapshotGeometry, activeEvent?.id])
   const layerClass = `layer-${snapshot.layer}`
   const uncertaintyClass = `uncertainty-${snapshot.uncertainty ?? 'medium'}`
+  const eventThreadPath = visibleEvents
+    .filter((event) => isVisible(rotation, event.location.lon, event.location.lat))
+    .map((event) => projection([event.location.lon, event.location.lat]))
+    .filter((point): point is [number, number] => Boolean(point))
+    .map(([x, y], index) => `${index === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`)
+    .join(' ')
 
   function rotateBy(delta: number): void {
     setManualView(true)
@@ -253,6 +259,7 @@ export function HistoryGlobe({ empire, snapshot, activeEvent, previousSnapshot, 
           )}
           <path key={`water-${empire.id}-${snapshot.year}`} d={path(snapshotGeometry) ?? undefined} className={`empire-extent empire-waterline ${layerClass} ${uncertaintyClass}`} style={{ '--empire-colour': empire.colour } as React.CSSProperties} />
           <path key={`land-${empire.id}-${snapshot.year}`} d={path(snapshotGeometry) ?? undefined} className={`empire-extent empire-land empire-current ${layerClass} ${uncertaintyClass}`} clipPath="url(#landClip)" style={{ '--empire-colour': empire.colour } as React.CSSProperties} />
+          {eventThreadPath && <path d={eventThreadPath} className="event-thread" aria-label="Projected sequence of visible historical events" />}
         </svg>
 
         {showLocations && empire.locations.map((location) => {
@@ -313,7 +320,7 @@ export function HistoryGlobe({ empire, snapshot, activeEvent, previousSnapshot, 
         <div className="event-list">
           {listedEvents.map((event) => (
             <button key={event.id} type="button" className={activeEvent?.id === event.id ? 'active' : ''} onClick={() => onSelectEvent(event)}>
-              <span>{formatYear(event.year)} · {event.type}</span>{event.title}
+              <span>{formatYear(event.year} · {event.type}</span>{event.title}
             </button>
           ))}
         </div>
