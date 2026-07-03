@@ -55,14 +55,7 @@ function eventNonClaim(event: HistoricalEvent, currentSnapshot: EmpireSnapshot):
   if (event.type === 'treaty') return currentSnapshot.layer === 'recognised'
     ? 'This is a recognised/legal marker, but the simplified fill still suppresses local exceptions and internal boundaries.'
     : 'This treaty marker is context for the selected layer; it should not be read as recognition of every shaded control area.'
-  return 'The shaded area is a simplified snapshot. Use the date, layer label and source row together before treating it as a territorial claim.'
-}
-
-function evidenceWeight(snapshot: EmpireSnapshot): string {
-  const quality = snapshot.sourceQuality ? snapshot.sourceQuality.replace('-', ' ') : 'source-backed'
-  const confidence = snapshot.confidence ? `${snapshot.confidence} confidence` : 'confidence not stated'
-  const uncertainty = snapshot.uncertainty ? `${snapshot.uncertainty} geometry uncertainty` : 'geometry uncertainty not stated'
-  return `${quality} · ${confidence} · ${uncertainty}`
+  return 'The shaded area is a simplified snapshot. Use the date, surrounding events and source row together before treating it as a territorial claim.'
 }
 
 function sourceDateLine(sourceKey: string | undefined): string | null {
@@ -73,13 +66,6 @@ function sourceDateLine(sourceKey: string | undefined): string | null {
   return dates.length > 0 ? dates.join(' · ') : null
 }
 
-function layerLabel(layer: EmpireSnapshot['layer']): string {
-  if (layer === 'recognised') return 'legal border'
-  if (layer === 'control') return 'control estimate'
-  if (layer === 'administrative') return 'administrative sketch'
-  if (layer === 'influence') return 'influence sketch'
-  return 'schematic extent'
-}
 
 function eventState(event: HistoricalEvent, snapshot: EmpireSnapshot, activeEventId: string | null): 'active' | 'past' | 'future' {
   if (event.id === activeEventId) return 'active'
@@ -227,18 +213,18 @@ function App(): React.JSX.Element {
           <div className="timeline-labels">{selectedEmpire.snapshots.map((item) => <span key={item.year}>{formatYear(item.year)}</span>)}</div>
           <div className="transition-strip" aria-label="Map transition context">
             <button type="button" onClick={() => stepSnapshot(-1)} disabled={!previousSnapshot}>
-              <span>Previous layer</span>
+              <span>Before</span>
               <strong>{previousSnapshot ? `${formatYear(previousSnapshot.year)} · ${previousSnapshot.label}` : 'Start of track'}</strong>
               <small>{previousSnapshot?.claim ?? 'No earlier snapshot for this track.'}</small>
             </button>
             <article>
-              <span>Map change now</span>
-              <strong>{layerLabel(snapshot.layer)}</strong>
+              <span>Now on the map</span>
+              <strong>{snapshot.label}</strong>
               <p>{snapshot.change}</p>
               <p className="area-metric"><b>Approx. area</b> {formatArea(currentAreaKm2)} · {areaDeltaLabel}</p>
             </article>
             <button type="button" onClick={() => stepSnapshot(1)} disabled={!nextSnapshot}>
-              <span>Next layer</span>
+              <span>After</span>
               <strong>{nextSnapshot ? `${formatYear(nextSnapshot.year)} · ${nextSnapshot.label}` : 'End of track'}</strong>
               <small>{nextSnapshot?.change ?? 'No later snapshot for this track.'}</small>
             </button>
@@ -273,7 +259,7 @@ function App(): React.JSX.Element {
           <aside className="inspector side-story" aria-live="polite">
             <p className="eyebrow">Selected detail</p>
             {inspectorItem ? inspectorItem.kind === 'event' ? (
-              <><Crosshair /><h2>{inspectorItem.value.title}</h2><p className="year">{formatYear(inspectorItem.value.year)} · {inspectorItem.value.type}</p><p>{inspectorItem.value.summary}</p>{eventSnapshotOffset && <p className="temporal-note">Nearest map snapshot: {formatYear(snapshot.year)}. The event marker is evidence/context; the filled layer is not a claim that the whole region changed in {formatYear(inspectorItem.value.year)}.</p>}<dl className="event-facts"><div className="evidence-note"><dt>Evidence note</dt><dd>{eventImplication(inspectorItem.value, snapshot)} {eventNonClaim(inspectorItem.value, snapshot)}</dd></div><div><dt>What changed</dt><dd>{snapshot.change ?? snapshot.note}</dd></div><div><dt>Snapshot claim</dt><dd>{snapshot.claim ?? snapshot.note}</dd></div><div><dt>Evidence weight</dt><dd>{evidenceWeight(snapshot)}</dd></div><div><dt>Layer type</dt><dd>{layerLabel(snapshot.layer)}</dd></div><div><dt>Location</dt><dd>{inspectorItem.value.location.lat.toFixed(2)}, {inspectorItem.value.location.lon.toFixed(2)}</dd></div><div><dt>Current layer</dt><dd>{selectedEmpire.name} · {snapshot.label} · {formatYear(snapshot.year)}{snapshot.asOf ? ` · data as of ${snapshot.asOf}` : ''}</dd></div></dl>{inspectorItem.value.source && (() => {
+              <><Crosshair /><h2>{inspectorItem.value.title}</h2><p className="year">{formatYear(inspectorItem.value.year)} · {inspectorItem.value.type}</p><p>{inspectorItem.value.summary}</p>{eventSnapshotOffset && <p className="temporal-note">Nearest map frame: {formatYear(snapshot.year)}. The event gives context for this moment in the sequence.</p>}<dl className="event-facts"><div className="evidence-note"><dt>Why now</dt><dd>{eventImplication(inspectorItem.value, snapshot)} {eventNonClaim(inspectorItem.value, snapshot)}</dd></div><div><dt>What changed</dt><dd>{snapshot.change ?? snapshot.note}</dd></div><div><dt>On screen</dt><dd>{selectedEmpire.name} · {snapshot.label} · {formatYear(snapshot.year)}</dd></div><div><dt>Where</dt><dd>{inspectorItem.value.location.lat.toFixed(2)}, {inspectorItem.value.location.lon.toFixed(2)}</dd></div></dl>{inspectorItem.value.source && (() => {
                 const info = getSourceInfo(inspectorItem.value.source)
                 const dateLine = sourceDateLine(inspectorItem.value.source)
                 return info ? <div className="source-card"><p className="eyebrow">Source</p><a href={info.url} target="_blank" rel="noreferrer">{info.title}</a><p>{info.kind} · {info.note}{dateLine ? ` · ${dateLine}` : ''}</p></div> : <p className="source-note">Source: {inspectorItem.value.source}</p>
@@ -284,20 +270,6 @@ function App(): React.JSX.Element {
               <><Search /><h2>No selection</h2><p>Click a timeline event, battle marker, or place marker to inspect the historical claim behind the map.</p></>
             )}
           </aside>
-        </section>
-
-        <section className="methodology-panel newspaper-method" aria-labelledby="methodology-title">
-          <div>
-            <p className="eyebrow">Reading the map</p>
-            <h2 id="methodology-title">Start with the year, then follow what changed.</h2>
-            <p>The filled shape is the selected moment in the story. Timeline ticks explain the pressure around that moment; battle and place markers are evidence points, not claims that an entire frontier moved on that exact day.</p>
-          </div>
-          <dl>
-            <div><dt>Filled area</dt><dd>The coloured layer is the best current reading of the selected snapshot: border, control, administration, or influence as labelled above.</dd></div>
-            <div><dt>Timeline ticks</dt><dd>Click a year to move the globe to the nearest mapped snapshot and read why that event matters.</dd></div>
-            <div><dt>Pins and battles</dt><dd>Markers locate important places and clashes. They explain the map; they do not replace the map.</dd></div>
-            <div><dt>Sources</dt><dd>Source rows name the reference used for this track. Modern conflict entries show date context where available.</dd></div>
-          </dl>
         </section>
       </section>
     </main>
