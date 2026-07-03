@@ -15,6 +15,12 @@ type InspectorItem =
 
 const EARTH_RADIUS_KM = 6371.0088
 
+interface ShareRoute {
+  readonly empireId: string
+  readonly snapshotIndex: number
+  readonly eventId: string | null
+}
+
 function formatYear(year: number): string { return year < 0 ? `${Math.abs(year)} BCE` : `${year} CE` }
 
 function approximateAreaKm2(snapshot: EmpireSnapshot): number {
@@ -77,15 +83,34 @@ function timelinePercent(year: number, start: number, end: number): number {
   return Math.max(0, Math.min(100, ((year - start) / (end - start)) * 100))
 }
 
+function routeFromUrl(): ShareRoute {
+  if (typeof window === 'undefined') return { empireId: empires[0].id, snapshotIndex: 1, eventId: null }
+  const params = new URLSearchParams(window.location.search)
+  const requestedEmpireId = params.get('track') ?? empires[0].id
+  const empire = empires.find((item) => item.id === requestedEmpireId) ?? empires[0]
+  const requestedEventId = params.get('event')
+  const event = requestedEventId ? empire.events.find((item) => item.id === requestedEventId) : undefined
+  if (event) return { empireId: empire.id, snapshotIndex: closestSnapshotIndex(empire.snapshots, event.year), eventId: event.id }
+  const requestedYear = params.has('year') ? Number(params.get('year')) : Number.NaN
+  const snapshotIndex = Number.isFinite(requestedYear) ? closestSnapshotIndex(empire.snapshots, requestedYear) : Math.min(1, empire.snapshots.length - 1)
+  return { empireId: empire.id, snapshotIndex, eventId: null }
+}
+
 function App(): React.JSX.Element {
-  const [empireId, setEmpireId] = useState(empires[0].id)
+  const [initialRoute] = useState<ShareRoute>(() => routeFromUrl())
+  const [empireId, setEmpireId] = useState(initialRoute.empireId)
   const selectedEmpire = useMemo(() => empires.find((empire) => empire.id === empireId) ?? empires[0], [empireId])
-  const [snapshotIndex, setSnapshotIndex] = useState(1)
+  const [snapshotIndex, setSnapshotIndex] = useState(initialRoute.snapshotIndex)
   const [showEvents, setShowEvents] = useState(true)
   const [showLocations, setShowLocations] = useState(true)
-  const [inspectorItem, setInspectorItem] = useState<InspectorItem | null>(null)
-  const [activeEventId, setActiveEventId] = useState<string | null>(null)
+  const [inspectorItem, setInspectorItem] = useState<InspectorItem | null>(() => {
+    const empire = empires.find((item) => item.id === initialRoute.empireId) ?? empires[0]
+    const event = initialRoute.eventId ? empire.events.find((item) => item.id === initialRoute.eventId) : undefined
+    return event ? { kind: 'event', value: event } : null
+  })
+  const [activeEventId, setActiveEventId] = useState<string | null>(initialRoute.eventId)
   const [isPlaying, setIsPlaying] = useState(false)
+  const [shareStatus, setShareStatus] = useState<'idle' | 'copied'>('idle')
 
   const snapshot = selectedEmpire.snapshots[Math.min(snapshotIndex, selectedEmpire.snapshots.length - 1)]
   const activeEvent = selectedEmpire.events.find((event) => event.id === activeEventId) ?? null
@@ -112,6 +137,15 @@ function App(): React.JSX.Element {
     }, 1700)
     return () => window.clearInterval(interval)
   }, [isPlaying, selectedEmpire.snapshots.length])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const params = new URLSearchParams()
+    params.set('track', selectedEmpire.id)
+    params.set('year', String(snapshot.year))
+    if (activeEventId) params.set('event', activeEventId)
+    window.history.replaceState(null, '', `${window.location.pathname}?${params.toString()}${window.location.hash}`)
+  }, [activeEventId, selectedEmpire.id, snapshot.year])
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent): void {
@@ -153,6 +187,19 @@ function App(): React.JSX.Element {
     setIsPlaying(false)
   }
 
+  async function copyShareLink(): Promise<void> {
+    const link = typeof window === 'undefined' ? '' : window.location.href
+    try {
+      await navigator.clipboard.writeText(link)
+      setShareStatus('copied')
+      window.setTimeout(() => setShareStatus('idle'), 1600)
+    } catch {
+      setShareStatus('copied')
+      window.prompt('Copy this history-borders link', link)
+      window.setTimeout(() => setShareStatus('idle'), 1600)
+    }
+  }
+
   return (
     <main className="app-shell">
       <section className="map-workspace" id="explore">
@@ -162,6 +209,7 @@ function App(): React.JSX.Element {
             <button type="button" onClick={() => stepSnapshot(-1)} disabled={!canStepBackward}>←</button>
             <button type="button" onClick={() => setIsPlaying((playing) => !playing)}>{isPlaying ? 'pause' : 'play'}</button>
             <button type="button" onClick={() => stepSnapshot(1)} disabled={!canStepForward}>→</button>
+            <button type="button" onClick={() => void copyShareLink()} aria-live="polite">{shareStatus === 'copied' ? 'copied link' : 'share view'}</button>
             <label><input type="checkbox" checked={showEvents} onChange={(event) => setShowEvents(event.target.checked)} /> events</label>
             <label><input type="checkbox" checked={showLocations} onChange={(event) => setShowLocations(event.target.checked)} /> places</label>
           </div>
